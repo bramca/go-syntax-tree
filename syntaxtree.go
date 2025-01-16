@@ -231,6 +231,7 @@ func createTree(t *SyntaxTree, parsedQuery string, startId int) (*Node, int) {
 			id = newId
 			previousNode = currentNode
 			currentNode = subTree
+			// TODO: find a better way to add the subtree (not with the '()' around the root)'
 			currentNode.Value = fmt.Sprintf("(%s)", currentNode.Value)
 			currentNode.Parent = previousNode
 			if previousNode != nil {
