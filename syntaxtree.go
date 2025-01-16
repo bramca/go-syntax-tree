@@ -16,7 +16,6 @@ const (
 	UnaryOperator
 	LeftOperand
 	RightOperand
-
 )
 
 func (e NodeType) String() string {
@@ -24,7 +23,7 @@ func (e NodeType) String() string {
 	case Operator:
 		return "Operator"
 	case UnaryOperator:
-		return "UnaryOpeartor"
+		return "UnaryOperator"
 	case LeftOperand:
 		return "LeftOperand"
 	case RightOperand:
@@ -34,37 +33,55 @@ func (e NodeType) String() string {
 	return "Unknown"
 }
 
+// SyntaxTree
+// Construct a syntax tree 󱁉 based on a defined syntax containing of simple
+// Operators, Binary Functions and Unary Functions with there mutual precedence
+// The construction of the tree will also take into account grouping using brackets '()' in the precedence
 type SyntaxTree struct {
+	// Root node of the tree
 	Root *Node
+
+	// List of all nodes of the tree
 	Nodes []*Node
+
+	// Precedence of the operators and functions in the syntax
+	// Operators with a lower index in this array have a higher precedence over operators with a lower index
 	OperatorPrecedence []string
+
+	// Define the patterns of the syntax operators
 	OperatorParsers []OperatorParser
+
+	// Define the format of the syntax binary functions
 	BinaryFunctionParsers []BinaryFunctionParser
+
+	// Define the format of the syntax unary functions
 	UnaryFunctionParsers []UnaryFunctionParser
+
 	// Define a separator that can be used to separate the operators and operands during parsing
+	// This is a string that cannot exist in the query character space
 	Separator string
 }
 
 type OperatorParser struct {
-	OperatorString string
+	OperatorString  string
 	OperatorPattern *regexp.Regexp
 }
 
 type BinaryFunctionParser struct {
-	FunctionName string
+	FunctionName     string
 	OpeningDelimiter string
 	ClosingDelimiter string
 	OperandSeparator byte
 }
 
 type UnaryFunctionParser struct {
-	FunctionName string
+	FunctionName     string
 	OpeningDelimiter string
 	ClosingDelimiter string
 }
 
 type Node struct {
-	Id int
+	Id         int
 	Parent     *Node
 	Value      string
 	Type       NodeType
@@ -111,7 +128,7 @@ func (t *SyntaxTree) ParseQuery(query string) (string, error) {
 		query = expression.ReplaceAllStringFunc(query, func(s string) string {
 			matches := expression.FindStringSubmatch(s)
 			if len(matches) == 3 {
-				return matches[1] + t.Separator + operator + t.Separator +  matches[2]
+				return matches[1] + t.Separator + operator + t.Separator + matches[2]
 			}
 
 			return operator
@@ -119,7 +136,7 @@ func (t *SyntaxTree) ParseQuery(query string) (string, error) {
 	}
 
 	for _, binaryFunctionParser := range t.BinaryFunctionParsers {
-		for firstIndex := strings.Index(query, binaryFunctionParser.FunctionName + binaryFunctionParser.OpeningDelimiter); firstIndex > 0; firstIndex = strings.Index(query, binaryFunctionParser.FunctionName + binaryFunctionParser.OpeningDelimiter) {
+		for firstIndex := strings.Index(query, binaryFunctionParser.FunctionName+binaryFunctionParser.OpeningDelimiter); firstIndex > 0; firstIndex = strings.Index(query, binaryFunctionParser.FunctionName+binaryFunctionParser.OpeningDelimiter) {
 			delimiterCount := 0
 			totalFuncString := ""
 			totalFuncIndex := 0
@@ -143,14 +160,14 @@ func (t *SyntaxTree) ParseQuery(query string) (string, error) {
 			}
 
 			newFuncString := totalFuncString[:separatorReplaceIndex] + t.Separator + binaryFunctionParser.FunctionName + t.Separator + totalFuncString[separatorReplaceIndex+1:totalFuncIndex]
-			newFuncString = strings.Replace(newFuncString, binaryFunctionParser.FunctionName + binaryFunctionParser.OpeningDelimiter, "", 1)
+			newFuncString = strings.Replace(newFuncString, binaryFunctionParser.FunctionName+binaryFunctionParser.OpeningDelimiter, "", 1)
 
 			query = strings.Replace(query, totalFuncString, newFuncString, 1)
 		}
 	}
 
 	for _, unaryFunctionParser := range t.UnaryFunctionParsers {
-		for firstIndex := strings.Index(query, unaryFunctionParser.FunctionName + unaryFunctionParser.OpeningDelimiter); firstIndex > 0; firstIndex = strings.Index(query, unaryFunctionParser.FunctionName + unaryFunctionParser.OpeningDelimiter) {
+		for firstIndex := strings.Index(query, unaryFunctionParser.FunctionName+unaryFunctionParser.OpeningDelimiter); firstIndex > 0; firstIndex = strings.Index(query, unaryFunctionParser.FunctionName+unaryFunctionParser.OpeningDelimiter) {
 			delimiterCount := 0
 			totalFuncString := ""
 			totalFuncIndex := 0
@@ -170,15 +187,14 @@ func (t *SyntaxTree) ParseQuery(query string) (string, error) {
 			}
 
 			newFuncString := totalFuncString
-			newFuncString = strings.Replace(newFuncString, unaryFunctionParser.FunctionName + unaryFunctionParser.OpeningDelimiter, unaryFunctionParser.FunctionName + t.Separator + unaryFunctionParser.OpeningDelimiter, 1)
+			newFuncString = strings.Replace(newFuncString, unaryFunctionParser.FunctionName+unaryFunctionParser.OpeningDelimiter, unaryFunctionParser.FunctionName+t.Separator+unaryFunctionParser.OpeningDelimiter, 1)
 
 			query = strings.Replace(query, totalFuncString, newFuncString, 1)
 		}
 	}
 
-	query = strings.ReplaceAll(query, "(", "(" + t.Separator)
-	query = strings.ReplaceAll(query, ")", t.Separator + ")")
-
+	query = strings.ReplaceAll(query, "(", "("+t.Separator)
+	query = strings.ReplaceAll(query, ")", t.Separator+")")
 
 	return query, nil
 }
@@ -239,9 +255,9 @@ func createTree(t *SyntaxTree, parsedQuery string, startId int) (*Node, int) {
 			}
 			if previousNode == nil && operatorType == UnaryOperator {
 				currentNode = &Node{
-					Id: id,
-					Type:      operatorType,
-					Value:     parsedQueryPart,
+					Id:    id,
+					Type:  operatorType,
+					Value: parsedQueryPart,
 				}
 
 				t.Nodes = append(t.Nodes, currentNode)
@@ -251,10 +267,10 @@ func createTree(t *SyntaxTree, parsedQuery string, startId int) (*Node, int) {
 			}
 			if previousNode != nil && operatorType == UnaryOperator {
 				currentNode = &Node{
-					Id: id,
-					Type:      operatorType,
+					Id:     id,
+					Type:   operatorType,
 					Parent: previousNode,
-					Value:     parsedQueryPart,
+					Value:  parsedQueryPart,
 				}
 				if previousNode.LeftChild == nil {
 					previousNode.LeftChild = currentNode
@@ -276,7 +292,7 @@ func createTree(t *SyntaxTree, parsedQuery string, startId int) (*Node, int) {
 				previousNode = previousNode.Parent
 			}
 			currentNode = &Node{
-				Id: id,
+				Id:        id,
 				Type:      operatorType,
 				LeftChild: previousNode,
 				Value:     parsedQueryPart,
@@ -304,7 +320,7 @@ func createTree(t *SyntaxTree, parsedQuery string, startId int) (*Node, int) {
 		if currentNode != nil && currentNode.Type == Operator {
 			previousNode = currentNode
 			currentNode = &Node{
-				Id: id,
+				Id:     id,
 				Type:   RightOperand,
 				Parent: previousNode,
 				Value:  parsedQueryPart,
@@ -319,9 +335,9 @@ func createTree(t *SyntaxTree, parsedQuery string, startId int) (*Node, int) {
 
 		previousNode = currentNode
 		currentNode = &Node{
-			Id: id,
-			Type: LeftOperand,
-			Value:  parsedQueryPart,
+			Id:    id,
+			Type:  LeftOperand,
+			Value: parsedQueryPart,
 		}
 
 		t.Nodes = append(t.Nodes, currentNode)
@@ -334,8 +350,6 @@ func createTree(t *SyntaxTree, parsedQuery string, startId int) (*Node, int) {
 	}
 
 	return currentNode, id
-
-
 }
 
 func (t SyntaxTree) String() string {

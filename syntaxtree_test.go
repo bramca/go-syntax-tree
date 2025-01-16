@@ -4,15 +4,13 @@ import (
 	"fmt"
 	"regexp"
 	"testing"
-
-	"github.com/bramca/go-syntax-tree/assert"
 )
 
 type Example struct {
 	OperatorPrecedence []string
-	OperatorParsers []OperatorParser
-	BinaryFunctions []string
-	UnaryFunctions []string
+	OperatorParsers    []OperatorParser
+	BinaryFunctions    []string
+	UnaryFunctions     []string
 }
 
 func (e Example) GetBinaryFunctionOperators(openingDelimiter string, closingDelimiter string, operatndSeparator byte) []BinaryFunctionParser {
@@ -30,7 +28,7 @@ func (e Example) GetBinaryFunctionOperators(openingDelimiter string, closingDeli
 }
 
 func (e Example) GetUnaryFunctionOperators(openingDelimiter string, closingDelimiter string) []UnaryFunctionParser {
-	unaryFunctionParsers :=  make([]UnaryFunctionParser, len(e.UnaryFunctions))
+	unaryFunctionParsers := make([]UnaryFunctionParser, len(e.UnaryFunctions))
 	for i, unaryFunction := range e.UnaryFunctions {
 		unaryFunctionParsers[i] = UnaryFunctionParser{
 			FunctionName:     unaryFunction,
@@ -40,6 +38,37 @@ func (e Example) GetUnaryFunctionOperators(openingDelimiter string, closingDelim
 	}
 
 	return unaryFunctionParsers
+}
+
+func Equal[V comparable](t *testing.T, got, expected V) {
+	t.Helper()
+
+	if expected != got {
+		t.Errorf(`Equal(
+t,
+got:
+%v
+,
+expected:
+%v
+)`, got, expected)
+	}
+}
+
+func Error(t *testing.T, err error) {
+	t.Helper()
+
+	if err == nil {
+		t.Error("Expected err not to be nil but it is")
+	}
+}
+
+func NoError(t *testing.T, err error) {
+	t.Helper()
+
+	if err != nil {
+		t.Errorf("Expected error to be nil but it is not. err: %v", err)
+	}
 }
 
 var (
@@ -52,7 +81,7 @@ var (
 			"+",
 			"-",
 		},
-		OperatorParsers:    []OperatorParser{
+		OperatorParsers: []OperatorParser{
 			{
 				OperatorString:  "*",
 				OperatorPattern: regexp.MustCompile(fmt.Sprintf(`([\d\(\)]*)\%s([\d\(\)]*|pow|sqrt)`, "*")),
@@ -70,10 +99,10 @@ var (
 				OperatorPattern: regexp.MustCompile(fmt.Sprintf(`([\d\(\)]*)\%s([\d\(\)]*|pow|sqrt)`, "-")),
 			},
 		},
-		BinaryFunctions:    []string{
+		BinaryFunctions: []string{
 			"pow",
 		},
-		UnaryFunctions:     []string{
+		UnaryFunctions: []string{
 			"sqrt",
 		},
 	}
@@ -110,50 +139,48 @@ var (
 			"le",
 			"and",
 			"or",
-
 		},
-		OperatorParsers:    []OperatorParser{
+		OperatorParsers: []OperatorParser{
 			{
 				OperatorString:  "eq",
 				OperatorPattern: regexp.MustCompile(`(.*?) eq (.*?)`),
 			},
 			{
-				OperatorString: "ne",
+				OperatorString:  "ne",
 				OperatorPattern: regexp.MustCompile(`(.*?) ne (.*?)`),
 			},
 			{
-				OperatorString: "gt",
+				OperatorString:  "gt",
 				OperatorPattern: regexp.MustCompile(`(.*?) gt (.*?)`),
 			},
 			{
-				OperatorString: "ge",
+				OperatorString:  "ge",
 				OperatorPattern: regexp.MustCompile(`(.*?) ge (.*?)`),
 			},
 			{
-				OperatorString: "lt",
+				OperatorString:  "lt",
 				OperatorPattern: regexp.MustCompile(`(.*?) lt (.*?)`),
 			},
 			{
-				OperatorString: "le",
+				OperatorString:  "le",
 				OperatorPattern: regexp.MustCompile(`(.*?) le (.*?)`),
 			},
 			{
-				OperatorString: "and",
+				OperatorString:  "and",
 				OperatorPattern: regexp.MustCompile(`(.*?) and (.*?)`),
 			},
 			{
-				OperatorString: "or",
+				OperatorString:  "or",
 				OperatorPattern: regexp.MustCompile(`(.*?) or (.*?)`),
 			},
-
 		},
-		BinaryFunctions:    []string{
+		BinaryFunctions: []string{
 			"concat",
 			"contains",
 			"endswith",
 			"startswith",
 		},
-		UnaryFunctions:     []string{
+		UnaryFunctions: []string{
 			"length",
 			"indexof",
 			"tolower",
@@ -176,11 +203,51 @@ var (
 	}
 )
 
+func TestNodeTypeString_ReturnsCorrectValue(t *testing.T) {
+	t.Parallel()
+	tests := map[string]struct {
+		nodeType       NodeType
+		expectedResult string
+	}{
+		"unknown": {
+			nodeType:       Unknown,
+			expectedResult: "Unknown",
+		},
+		"operator": {
+			nodeType:       Operator,
+			expectedResult: "Operator",
+		},
+		"unaryoperator": {
+			nodeType:       UnaryOperator,
+			expectedResult: "UnaryOperator",
+		},
+		"leftoperand": {
+			nodeType:       LeftOperand,
+			expectedResult: "LeftOperand",
+		},
+		"rightoperand": {
+			nodeType:       RightOperand,
+			expectedResult: "RightOperand",
+		},
+	}
+
+	for name, testData := range tests {
+		testData := testData
+		t.Run(name, func(t *testing.T) {
+			// Act
+			result := testData.nodeType.String()
+
+			// Assert
+			Equal(t, result, testData.expectedResult)
+		})
+	}
+}
+
 func TestParseQuery_ReturnsError(t *testing.T) {
 	t.Parallel()
-	tests := map[string]struct{
-		syntaxTree SyntaxTree
-		query string
+	tests := map[string]struct {
+		syntaxTree       SyntaxTree
+		query            string
 		expectedErrorMsg string
 	}{
 		"missing closing bracket": {
@@ -191,7 +258,7 @@ func TestParseQuery_ReturnsError(t *testing.T) {
 				UnaryFunctionParsers:  exampleMath.GetUnaryFunctionOperators("(", ")"),
 				Separator:             ";",
 			},
-			query: "(",
+			query:            "(",
 			expectedErrorMsg: "Missing closing bracket ')'",
 		},
 		"missing opening bracket": {
@@ -202,7 +269,7 @@ func TestParseQuery_ReturnsError(t *testing.T) {
 				UnaryFunctionParsers:  exampleMath.GetUnaryFunctionOperators("(", ")"),
 				Separator:             ";",
 			},
-			query: "())",
+			query:            "())",
 			expectedErrorMsg: "Missing opening bracket '('",
 		},
 	}
@@ -219,18 +286,18 @@ func TestParseQuery_ReturnsError(t *testing.T) {
 			parsedQuery, err := syntaxTree.ParseQuery(query)
 
 			// Assert
-			assert.Equal(t, parsedQuery, "")
-			assert.Error(t, err)
-			assert.Equal(t, err.Error(), testData.expectedErrorMsg)
+			Equal(t, parsedQuery, "")
+			Error(t, err)
+			Equal(t, err.Error(), testData.expectedErrorMsg)
 		})
 	}
 }
 
 func TestParseQuery_ReturnsCorrectQuery(t *testing.T) {
 	t.Parallel()
-	tests := map[string]struct{
-		syntaxTree SyntaxTree
-		query string
+	tests := map[string]struct {
+		syntaxTree          SyntaxTree
+		query               string
 		expectedParsedQuery string
 	}{
 		"math simple example": {
@@ -241,7 +308,7 @@ func TestParseQuery_ReturnsCorrectQuery(t *testing.T) {
 				UnaryFunctionParsers:  exampleMath.GetUnaryFunctionOperators("(", ")"),
 				Separator:             ";",
 			},
-			query: "1+2*3",
+			query:               "1+2*3",
 			expectedParsedQuery: "1;+;2;*;3",
 		},
 		"math simple example grouping": {
@@ -252,7 +319,7 @@ func TestParseQuery_ReturnsCorrectQuery(t *testing.T) {
 				UnaryFunctionParsers:  exampleOdata.GetUnaryFunctionOperators("(", ")"),
 				Separator:             ";",
 			},
-			query: "(1+2)*3",
+			query:               "(1+2)*3",
 			expectedParsedQuery: "(;1;+;2;);*;3",
 		},
 		"math simple example unary function": {
@@ -263,7 +330,7 @@ func TestParseQuery_ReturnsCorrectQuery(t *testing.T) {
 				UnaryFunctionParsers:  exampleMath.GetUnaryFunctionOperators("(", ")"),
 				Separator:             ";",
 			},
-			query: "(1+2)*sqrt(3)",
+			query:               "(1+2)*sqrt(3)",
 			expectedParsedQuery: "(;1;+;2;);*;sqrt;(;3;)",
 		},
 		"math simple example function recursion": {
@@ -274,7 +341,7 @@ func TestParseQuery_ReturnsCorrectQuery(t *testing.T) {
 				UnaryFunctionParsers:  exampleMath.GetUnaryFunctionOperators("(", ")"),
 				Separator:             ";",
 			},
-			query: "(1+2)*sqrt(pow(2,pow(3,3)))",
+			query:               "(1+2)*sqrt(pow(2,pow(3,3)))",
 			expectedParsedQuery: "(;1;+;2;);*;sqrt;(;2;pow;3;pow;3;)",
 		},
 		"math complex example": {
@@ -285,7 +352,7 @@ func TestParseQuery_ReturnsCorrectQuery(t *testing.T) {
 				UnaryFunctionParsers:  exampleMath.GetUnaryFunctionOperators("(", ")"),
 				Separator:             ";",
 			},
-			query: "1-sqrt(pow(2,3)+1)*2/(sqrt(1+1)*pow(3,pow(3,2)))",
+			query:               "1-sqrt(pow(2,3)+1)*2/(sqrt(1+1)*pow(3,pow(3,2)))",
 			expectedParsedQuery: "1;-;sqrt;(;2;pow;3;+;1;);*;2;/;(;sqrt;(;1;+;1;);*;3;pow;3;pow;2;)",
 		},
 		"odata complex example": {
@@ -296,7 +363,7 @@ func TestParseQuery_ReturnsCorrectQuery(t *testing.T) {
 				UnaryFunctionParsers:  exampleOdata.GetUnaryFunctionOperators("(", ")"),
 				Separator:             ";",
 			},
-			query: "name eq 'John' and (concat(lastname,concat(' ', name)) eq 'Smith John' or contains(concat(name,lastname),'Smith') or length(concat(name,lastname)) eq 10)",
+			query:               "name eq 'John' and (concat(lastname,concat(' ', name)) eq 'Smith John' or contains(concat(name,lastname),'Smith') or length(concat(name,lastname)) eq 10)",
 			expectedParsedQuery: "name;eq;'John';and;(;lastname;concat;' ';concat; name;eq;'Smith John';or;name;concat;lastname;contains;'Smith';or;length;(;name;concat;lastname;);eq;10;)",
 		},
 	}
@@ -312,17 +379,17 @@ func TestParseQuery_ReturnsCorrectQuery(t *testing.T) {
 			parsedQuery, err := syntaxTree.ParseQuery(query)
 
 			// Assert
-			assert.NoError(t, err)
-			assert.Equal(t, parsedQuery, testData.expectedParsedQuery)
+			NoError(t, err)
+			Equal(t, parsedQuery, testData.expectedParsedQuery)
 		})
 	}
 }
 
 func TestConstructTree_ReturnsError(t *testing.T) {
 	t.Parallel()
-	tests := map[string]struct{
-		syntaxTree SyntaxTree
-		query string
+	tests := map[string]struct {
+		syntaxTree       SyntaxTree
+		query            string
 		expectedErrorMsg string
 	}{
 		"example missing opening bracket": {
@@ -333,7 +400,7 @@ func TestConstructTree_ReturnsError(t *testing.T) {
 				UnaryFunctionParsers:  exampleMath.GetUnaryFunctionOperators("(", ")"),
 				Separator:             ";",
 			},
-			query: "(1+2))*3",
+			query:            "(1+2))*3",
 			expectedErrorMsg: "Missing opening bracket '('",
 		},
 		"example missing closing bracket": {
@@ -344,7 +411,7 @@ func TestConstructTree_ReturnsError(t *testing.T) {
 				UnaryFunctionParsers:  exampleMath.GetUnaryFunctionOperators("(", ")"),
 				Separator:             ";",
 			},
-			query: "(1+(2*3)",
+			query:            "(1+(2*3)",
 			expectedErrorMsg: "Missing closing bracket ')'",
 		},
 	}
@@ -360,17 +427,17 @@ func TestConstructTree_ReturnsError(t *testing.T) {
 			err := syntaxTree.ConstructTree(query)
 
 			// Assert
-			assert.Error(t, err)
-			assert.Equal(t, err.Error(), testData.expectedErrorMsg)
+			Error(t, err)
+			Equal(t, err.Error(), testData.expectedErrorMsg)
 		})
 	}
 }
 
 func TestConstructTree_ReturnsNoError(t *testing.T) {
 	t.Parallel()
-	tests := map[string]struct{
+	tests := map[string]struct {
 		syntaxTree SyntaxTree
-		query string
+		query      string
 	}{
 		"math simple example": {
 			syntaxTree: SyntaxTree{
@@ -445,16 +512,16 @@ func TestConstructTree_ReturnsNoError(t *testing.T) {
 			err := syntaxTree.ConstructTree(query)
 
 			// Assert
-			assert.NoError(t, err)
+			NoError(t, err)
 		})
 	}
 }
 
 func TestConstructTree_CreatesCorrectGraph(t *testing.T) {
 	t.Parallel()
-	tests := map[string]struct{
-		syntaxTree SyntaxTree
-		query string
+	tests := map[string]struct {
+		syntaxTree    SyntaxTree
+		query         string
 		expectedGraph string
 	}{
 		"math simple example": {
@@ -608,8 +675,8 @@ func TestConstructTree_CreatesCorrectGraph(t *testing.T) {
 			err := syntaxTree.ConstructTree(query)
 
 			// Assert
-			assert.NoError(t, err)
-			assert.Equal(t, fmt.Sprintf("%s", syntaxTree), testData.expectedGraph)
+			NoError(t, err)
+			Equal(t, fmt.Sprintf("%s", syntaxTree), testData.expectedGraph)
 		})
 	}
 }
