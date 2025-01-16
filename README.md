@@ -1,4 +1,4 @@
-# 󱁉 go-syntax-tree
+# 🌲 go-syntax-tree
 
 [![Go package](https://github.com/bramca/go-syntax-tree/actions/workflows/test.yaml/badge.svg)](https://github.com/bramca/go-syntax-tree/actions/workflows/test.yaml)
 
@@ -10,7 +10,7 @@ It will also contain a list of all `Nodes` in the `SyntaxTree`.
 There is a `.String()` function that will print the `SyntaxTree` in [dot](https://graphviz.org/doc/info/lang.html) file syntax.
 This can be used to write the `SyntaxTree` to a `.dot` file that can be parsed to an **image** to visualize the tree. (eg. `❯ dot -Tpng tree.dot > tree.png`)
 
-## 󰈮 Example
+## 📋 Example
 
 ```go
 

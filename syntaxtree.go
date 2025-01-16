@@ -34,7 +34,7 @@ func (e NodeType) String() string {
 }
 
 // SyntaxTree
-// Construct a syntax tree 󱁉 based on a defined syntax containing of simple
+// Construct a syntax tree based on a defined syntax containing of simple
 // Operators, Binary Functions and Unary Functions with there mutual precedence
 // The construction of the tree will also take into account grouping using brackets '()' in the precedence
 type SyntaxTree struct {
