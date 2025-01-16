@@ -18,7 +18,7 @@ import (
 	"fmt"
 	"regexp"
 
-    "github.com/bramca/go-syntax-tree"
+	syntaxtree "github.com/bramca/go-syntax-tree"
 )
 
 func firstExample() {
@@ -26,8 +26,8 @@ func firstExample() {
 	operatorsPrecedence := []string{
 		"pow",
 		"sqrt",
-		"*",
 		"/",
+		"*",
 		"+",
 		"-",
 	}
@@ -82,10 +82,14 @@ func firstExample() {
 		Separator: ";",
 	}
 
-	fmt.Printf("parsed query: %s\n", syntaxTree.ParseQuery(query))
+    err := syntaxTree.ConstructTree(query)
+    if err != nil {
+		panic(fmt.Sprintf("Could not construct tree for query '%s': %s\n", query, err))
+    }
 
-	syntaxTree.ConstructGraph(query)
 	fmt.Printf("%s", &syntaxTree)
-
 }
 ```
+
+will result in the following tree:
+![Syntax Tree](.img/tree.png)
