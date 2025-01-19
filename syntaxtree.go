@@ -122,6 +122,8 @@ func (t *SyntaxTree) ParseQuery(query string) (string, error) {
 		return "", errors.New("Missing opening bracket '('")
 	}
 
+	// TODO: Add more checks for parsing (e.g. operators missing an operand, operands missing an operator or function, ...)
+
 	for _, operatorParser := range t.OperatorParsers {
 		operator := operatorParser.OperatorString
 		expression := operatorParser.OperatorPattern
@@ -203,7 +205,7 @@ func createTree(t *SyntaxTree, parsedQuery string, startId int) (*Node, int) {
 	var currentNode *Node
 	var previousNode *Node
 
-	parsedQuerySplit := strings.Split(parsedQuery, ";")
+	parsedQuerySplit := strings.Split(parsedQuery, t.Separator)
 	id := startId
 	for index := 0; index < len(parsedQuerySplit); index++ {
 		parsedQueryPart := parsedQuerySplit[index]
@@ -226,7 +228,7 @@ func createTree(t *SyntaxTree, parsedQuery string, startId int) (*Node, int) {
 					break
 				}
 			}
-			subparsedQuery := strings.Join(parsedQuerySplit[index+1:closingIndex], ";")
+			subparsedQuery := strings.Join(parsedQuerySplit[index+1:closingIndex], t.Separator)
 			subTree, newId := createTree(t, subparsedQuery, id)
 			id = newId
 			previousNode = currentNode

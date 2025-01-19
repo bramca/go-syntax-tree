@@ -633,7 +633,7 @@ func TestConstructTree_CreatesCorrectGraph(t *testing.T) {
 				OperatorParsers:       exampleOdata.OperatorParsers,
 				BinaryFunctionParsers: exampleOdata.GetBinaryFunctionOperators("(", ")", ','),
 				UnaryFunctionParsers:  exampleOdata.GetUnaryFunctionOperators("(", ")"),
-				Separator:             ";",
+				Separator:             "|",
 			},
 			query: "name eq 'John' and (concat(lastname,concat(' ', name)) eq 'Smith John' or contains(concat(name,lastname),'Smith') or length(concat(name,lastname)) eq 10)",
 			expectedGraph: `graph {

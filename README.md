@@ -87,7 +87,7 @@ func firstExample() {
 		panic(fmt.Sprintf("Could not construct tree for query '%s': %s\n", query, err))
     }
 
-	fmt.Printf("%s", &syntaxTree)
+    fmt.Printf("%s", &syntaxTree)
 }
 ```
 
