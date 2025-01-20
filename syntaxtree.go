@@ -87,6 +87,7 @@ type Node struct {
 	Type       NodeType
 	LeftChild  *Node
 	RightChild *Node
+	IsGroup    bool
 }
 
 func (t *SyntaxTree) ConstructTree(query string) error {
@@ -233,8 +234,7 @@ func createTree(t *SyntaxTree, parsedQuery string, startId int) (*Node, int) {
 			id = newId
 			previousNode = currentNode
 			currentNode = subTree
-			// TODO: find a better way to add the subtree (not with the '()' around the root)'
-			currentNode.Value = fmt.Sprintf("(%s)", currentNode.Value)
+			currentNode.IsGroup = true
 			currentNode.Parent = previousNode
 			if previousNode != nil {
 				if previousNode.LeftChild == nil {
@@ -289,7 +289,7 @@ func createTree(t *SyntaxTree, parsedQuery string, startId int) (*Node, int) {
 			for previousNode.Parent != nil {
 				// if the previous node parent is an operator and its precedence is lower (higher index in array) then the current operator
 				// we can stop the loop
-				if previousNode.Parent.Type == Operator && slices.Index(t.OperatorPrecedence, previousNode.Parent.Value) > slices.Index(t.OperatorPrecedence, parsedQueryPart) {
+				if previousNode.Parent.Type == Operator && slices.Index(t.OperatorPrecedence, previousNode.Parent.Value) > slices.Index(t.OperatorPrecedence, parsedQueryPart) && !previousNode.Parent.IsGroup {
 					break
 				}
 				previousNode = previousNode.Parent
