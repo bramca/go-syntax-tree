@@ -22,7 +22,7 @@ import (
 )
 
 func firstExample() {
-	query := "1-sqrt(pow(2,3)+1)*2/(sqrt(1+1)*pow(3,pow(3,2)))"
+	query := "1-sqrt(pow(2,3)+1)*2/(sqrt(1+1)*pow(3+3,pow(3,sqrt(2))))"
 	operatorsPrecedence := []string{
 		"pow",
 		"sqrt",

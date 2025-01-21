@@ -162,8 +162,9 @@ func (t *SyntaxTree) ParseQuery(query string) (string, error) {
 				totalFuncIndex++
 			}
 
-			newFuncString := totalFuncString[:separatorReplaceIndex] + t.Separator + binaryFunctionParser.FunctionName + t.Separator + totalFuncString[separatorReplaceIndex+1:totalFuncIndex]
-			newFuncString = strings.Replace(newFuncString, binaryFunctionParser.FunctionName+binaryFunctionParser.OpeningDelimiter, "", 1)
+			newFuncString := totalFuncString[:separatorReplaceIndex] + ")" + t.Separator + binaryFunctionParser.FunctionName + t.Separator + "(" + totalFuncString[separatorReplaceIndex+1:totalFuncIndex] + ")"
+			newFuncString = strings.Replace(newFuncString, binaryFunctionParser.FunctionName+binaryFunctionParser.OpeningDelimiter, "(", 1)
+			newFuncString = strings.Replace(newFuncString, binaryFunctionParser.ClosingDelimiter, ")", 1)
 
 			query = strings.Replace(query, totalFuncString, newFuncString, 1)
 		}
@@ -190,7 +191,8 @@ func (t *SyntaxTree) ParseQuery(query string) (string, error) {
 			}
 
 			newFuncString := totalFuncString
-			newFuncString = strings.Replace(newFuncString, unaryFunctionParser.FunctionName+unaryFunctionParser.OpeningDelimiter, unaryFunctionParser.FunctionName+t.Separator+unaryFunctionParser.OpeningDelimiter, 1)
+			newFuncString = strings.Replace(newFuncString, unaryFunctionParser.FunctionName+unaryFunctionParser.OpeningDelimiter, unaryFunctionParser.FunctionName+t.Separator+"(", 1)
+			newFuncString = strings.Replace(newFuncString, unaryFunctionParser.ClosingDelimiter, ")", 1)
 
 			query = strings.Replace(query, totalFuncString, newFuncString, 1)
 		}

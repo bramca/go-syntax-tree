@@ -342,7 +342,7 @@ func TestParseQuery_ReturnsCorrectQuery(t *testing.T) {
 				Separator:             ";",
 			},
 			query:               "(1+2)*sqrt(pow(2,pow(3,3)))",
-			expectedParsedQuery: "(;1;+;2;);*;sqrt;(;2;pow;3;pow;3;)",
+			expectedParsedQuery: "(;1;+;2;);*;sqrt;(;(;2;);pow;(;(;3;);pow;(;3;););)",
 		},
 		"math complex example": {
 			syntaxTree: SyntaxTree{
@@ -352,8 +352,8 @@ func TestParseQuery_ReturnsCorrectQuery(t *testing.T) {
 				UnaryFunctionParsers:  exampleMath.GetUnaryFunctionOperators("(", ")"),
 				Separator:             ";",
 			},
-			query:               "1-sqrt(pow(2,3)+1)*2/(sqrt(1+1)*pow(3,pow(3,2)))",
-			expectedParsedQuery: "1;-;sqrt;(;2;pow;3;+;1;);*;2;/;(;sqrt;(;1;+;1;);*;3;pow;3;pow;2;)",
+			query:               "1-sqrt(pow(2,3)+1)*2/(sqrt(1+1)*pow(3+3,pow(3,sqrt(2))))",
+			expectedParsedQuery: "1;-;sqrt;(;(;2;);pow;(;3;);+;1;);*;2;/;(;sqrt;(;1;+;1;);*;(;3;+;3;);pow;(;(;3;);pow;(;sqrt;(;2;);););)",
 		},
 		"odata complex example": {
 			syntaxTree: SyntaxTree{
@@ -364,7 +364,7 @@ func TestParseQuery_ReturnsCorrectQuery(t *testing.T) {
 				Separator:             ";",
 			},
 			query:               "name eq 'John' and (concat(lastname,concat(' ', name)) eq 'Smith John' or contains(concat(name,lastname),'Smith') or length(concat(name,lastname)) eq 10)",
-			expectedParsedQuery: "name;eq;'John';and;(;lastname;concat;' ';concat; name;eq;'Smith John';or;name;concat;lastname;contains;'Smith';or;length;(;name;concat;lastname;);eq;10;)",
+			expectedParsedQuery: "name;eq;'John';and;(;(;lastname;);concat;(;(;' ';);concat;(; name;););eq;'Smith John';or;(;(;name;);concat;(;lastname;););contains;(;'Smith';);or;length;(;(;name;);concat;(;lastname;););eq;10;)",
 		},
 	}
 
@@ -587,11 +587,11 @@ func TestConstructTree_CreatesCorrectGraph(t *testing.T) {
 	"1 [+]" -- "2 [2]"
 	"3 [*]" -- "1 [+]"
 	"6 [pow]" -- "5 [2]"
-	"6 [pow]" -- "7 [3]"
-	"8 [pow]" -- "6 [pow]"
+	"8 [pow]" -- "7 [3]"
 	"9 [sqrt]" -- "10 [3]"
 	"8 [pow]" -- "9 [sqrt]"
-	"4 [sqrt]" -- "8 [pow]"
+	"6 [pow]" -- "8 [pow]"
+	"4 [sqrt]" -- "6 [pow]"
 	"3 [*]" -- "4 [sqrt]"
 }`,
 		},
@@ -603,7 +603,7 @@ func TestConstructTree_CreatesCorrectGraph(t *testing.T) {
 				UnaryFunctionParsers:  exampleMath.GetUnaryFunctionOperators("(", ")"),
 				Separator:             ";",
 			},
-			query: "1-sqrt(pow(2,3)+1)*2/(sqrt(1+1)*pow(3,pow(3,2)))",
+			query: "1-sqrt(pow(2,3)+1)*2/(sqrt(1+1)*pow(3+3,pow(3,sqrt(2))))",
 			expectedGraph: `graph {
 	"1 [-]" -- "0 [1]"
 	"4 [pow]" -- "3 [2]"
@@ -617,10 +617,13 @@ func TestConstructTree_CreatesCorrectGraph(t *testing.T) {
 	"13 [+]" -- "14 [1]"
 	"11 [sqrt]" -- "13 [+]"
 	"15 [*]" -- "11 [sqrt]"
-	"17 [pow]" -- "16 [3]"
-	"17 [pow]" -- "18 [3]"
-	"19 [pow]" -- "17 [pow]"
-	"19 [pow]" -- "20 [2]"
+	"17 [+]" -- "16 [3]"
+	"17 [+]" -- "18 [3]"
+	"19 [pow]" -- "17 [+]"
+	"21 [pow]" -- "20 [3]"
+	"22 [sqrt]" -- "23 [2]"
+	"21 [pow]" -- "22 [sqrt]"
+	"19 [pow]" -- "21 [pow]"
 	"15 [*]" -- "19 [pow]"
 	"10 [/]" -- "15 [*]"
 	"8 [*]" -- "10 [/]"
@@ -641,10 +644,10 @@ func TestConstructTree_CreatesCorrectGraph(t *testing.T) {
 	"1 [eq]" -- "2 ['John']"
 	"3 [and]" -- "1 [eq]"
 	"5 [concat]" -- "4 [lastname]"
-	"5 [concat]" -- "6 [' ']"
-	"7 [concat]" -- "5 [concat]"
+	"7 [concat]" -- "6 [' ']"
 	"7 [concat]" -- "8 [ name]"
-	"9 [eq]" -- "7 [concat]"
+	"5 [concat]" -- "7 [concat]"
+	"9 [eq]" -- "5 [concat]"
 	"9 [eq]" -- "10 ['Smith John']"
 	"11 [or]" -- "9 [eq]"
 	"13 [concat]" -- "12 [name]"
