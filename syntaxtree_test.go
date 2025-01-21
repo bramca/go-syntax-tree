@@ -13,7 +13,7 @@ type Example struct {
 	UnaryFunctions     []string
 }
 
-func (e Example) GetBinaryFunctionOperators(openingDelimiter string, closingDelimiter string, operatndSeparator byte) []BinaryFunctionParser {
+func (e Example) GetBinaryFunctionOperators(openingDelimiter byte, closingDelimiter byte, operatndSeparator byte) []BinaryFunctionParser {
 	binaryFunctionParsers := make([]BinaryFunctionParser, len(e.BinaryFunctions))
 	for i, binaryFunction := range e.BinaryFunctions {
 		binaryFunctionParsers[i] = BinaryFunctionParser{
@@ -27,7 +27,7 @@ func (e Example) GetBinaryFunctionOperators(openingDelimiter string, closingDeli
 	return binaryFunctionParsers
 }
 
-func (e Example) GetUnaryFunctionOperators(openingDelimiter string, closingDelimiter string) []UnaryFunctionParser {
+func (e Example) GetUnaryFunctionOperators(openingDelimiter byte, closingDelimiter byte) []UnaryFunctionParser {
 	unaryFunctionParsers := make([]UnaryFunctionParser, len(e.UnaryFunctions))
 	for i, unaryFunction := range e.UnaryFunctions {
 		unaryFunctionParsers[i] = UnaryFunctionParser{
@@ -254,8 +254,8 @@ func TestParseQuery_ReturnsError(t *testing.T) {
 			syntaxTree: SyntaxTree{
 				OperatorPrecedence:    exampleMath.OperatorPrecedence,
 				OperatorParsers:       exampleMath.OperatorParsers,
-				BinaryFunctionParsers: exampleMath.GetBinaryFunctionOperators("(", ")", ','),
-				UnaryFunctionParsers:  exampleMath.GetUnaryFunctionOperators("(", ")"),
+				BinaryFunctionParsers: exampleMath.GetBinaryFunctionOperators('(', ')', ','),
+				UnaryFunctionParsers:  exampleMath.GetUnaryFunctionOperators('(', ')'),
 				Separator:             ";",
 			},
 			query:            "(",
@@ -265,8 +265,8 @@ func TestParseQuery_ReturnsError(t *testing.T) {
 			syntaxTree: SyntaxTree{
 				OperatorPrecedence:    exampleMath.OperatorPrecedence,
 				OperatorParsers:       exampleMath.OperatorParsers,
-				BinaryFunctionParsers: exampleMath.GetBinaryFunctionOperators("(", ")", ','),
-				UnaryFunctionParsers:  exampleMath.GetUnaryFunctionOperators("(", ")"),
+				BinaryFunctionParsers: exampleMath.GetBinaryFunctionOperators('(', ')', ','),
+				UnaryFunctionParsers:  exampleMath.GetUnaryFunctionOperators('(', ')'),
 				Separator:             ";",
 			},
 			query:            "())",
@@ -304,8 +304,8 @@ func TestParseQuery_ReturnsCorrectQuery(t *testing.T) {
 			syntaxTree: SyntaxTree{
 				OperatorPrecedence:    exampleMath.OperatorPrecedence,
 				OperatorParsers:       exampleMath.OperatorParsers,
-				BinaryFunctionParsers: exampleMath.GetBinaryFunctionOperators("(", ")", ','),
-				UnaryFunctionParsers:  exampleMath.GetUnaryFunctionOperators("(", ")"),
+				BinaryFunctionParsers: exampleMath.GetBinaryFunctionOperators('(', ')', ','),
+				UnaryFunctionParsers:  exampleMath.GetUnaryFunctionOperators('(', ')'),
 				Separator:             ";",
 			},
 			query:               "1+2*3",
@@ -315,8 +315,8 @@ func TestParseQuery_ReturnsCorrectQuery(t *testing.T) {
 			syntaxTree: SyntaxTree{
 				OperatorPrecedence:    exampleMath.OperatorPrecedence,
 				OperatorParsers:       exampleMath.OperatorParsers,
-				BinaryFunctionParsers: exampleMath.GetBinaryFunctionOperators("(", ")", ','),
-				UnaryFunctionParsers:  exampleOdata.GetUnaryFunctionOperators("(", ")"),
+				BinaryFunctionParsers: exampleMath.GetBinaryFunctionOperators('(', ')', ','),
+				UnaryFunctionParsers:  exampleOdata.GetUnaryFunctionOperators('(', ')'),
 				Separator:             ";",
 			},
 			query:               "(1+2)*3",
@@ -326,8 +326,8 @@ func TestParseQuery_ReturnsCorrectQuery(t *testing.T) {
 			syntaxTree: SyntaxTree{
 				OperatorPrecedence:    exampleMath.OperatorPrecedence,
 				OperatorParsers:       exampleMath.OperatorParsers,
-				BinaryFunctionParsers: exampleMath.GetBinaryFunctionOperators("(", ")", ','),
-				UnaryFunctionParsers:  exampleMath.GetUnaryFunctionOperators("(", ")"),
+				BinaryFunctionParsers: exampleMath.GetBinaryFunctionOperators('(', ')', ','),
+				UnaryFunctionParsers:  exampleMath.GetUnaryFunctionOperators('(', ')'),
 				Separator:             ";",
 			},
 			query:               "(1+2)*sqrt(3)",
@@ -337,8 +337,8 @@ func TestParseQuery_ReturnsCorrectQuery(t *testing.T) {
 			syntaxTree: SyntaxTree{
 				OperatorPrecedence:    exampleMath.OperatorPrecedence,
 				OperatorParsers:       exampleMath.OperatorParsers,
-				BinaryFunctionParsers: exampleMath.GetBinaryFunctionOperators("(", ")", ','),
-				UnaryFunctionParsers:  exampleMath.GetUnaryFunctionOperators("(", ")"),
+				BinaryFunctionParsers: exampleMath.GetBinaryFunctionOperators('(', ')', ','),
+				UnaryFunctionParsers:  exampleMath.GetUnaryFunctionOperators('(', ')'),
 				Separator:             ";",
 			},
 			query:               "(1+2)*sqrt(pow(2,pow(3,3)))",
@@ -348,19 +348,30 @@ func TestParseQuery_ReturnsCorrectQuery(t *testing.T) {
 			syntaxTree: SyntaxTree{
 				OperatorPrecedence:    exampleMath.OperatorPrecedence,
 				OperatorParsers:       exampleMath.OperatorParsers,
-				BinaryFunctionParsers: exampleMath.GetBinaryFunctionOperators("(", ")", ','),
-				UnaryFunctionParsers:  exampleMath.GetUnaryFunctionOperators("(", ")"),
+				BinaryFunctionParsers: exampleMath.GetBinaryFunctionOperators('(', ')', ','),
+				UnaryFunctionParsers:  exampleMath.GetUnaryFunctionOperators('(', ')'),
 				Separator:             ";",
 			},
 			query:               "1-sqrt(pow(2,3)+1)*2/(sqrt(1+1)*pow(3+3,pow(3,sqrt(2))))",
+			expectedParsedQuery: "1;-;sqrt;(;(;2;);pow;(;3;);+;1;);*;2;/;(;sqrt;(;1;+;1;);*;(;3;+;3;);pow;(;(;3;);pow;(;sqrt;(;2;);););)",
+		},
+		"math complex example different delimiters": {
+			syntaxTree: SyntaxTree{
+				OperatorPrecedence:    exampleMath.OperatorPrecedence,
+				OperatorParsers:       exampleMath.OperatorParsers,
+				BinaryFunctionParsers: exampleMath.GetBinaryFunctionOperators('[', ']', ','),
+				UnaryFunctionParsers:  exampleMath.GetUnaryFunctionOperators('{', '}'),
+				Separator:             ";",
+			},
+			query:               "1-sqrt{pow[2,3]+1}*2/(sqrt{1+1}*pow[3+3,pow[3,sqrt{2}]])",
 			expectedParsedQuery: "1;-;sqrt;(;(;2;);pow;(;3;);+;1;);*;2;/;(;sqrt;(;1;+;1;);*;(;3;+;3;);pow;(;(;3;);pow;(;sqrt;(;2;);););)",
 		},
 		"odata complex example": {
 			syntaxTree: SyntaxTree{
 				OperatorPrecedence:    exampleOdata.OperatorPrecedence,
 				OperatorParsers:       exampleOdata.OperatorParsers,
-				BinaryFunctionParsers: exampleOdata.GetBinaryFunctionOperators("(", ")", ','),
-				UnaryFunctionParsers:  exampleOdata.GetUnaryFunctionOperators("(", ")"),
+				BinaryFunctionParsers: exampleOdata.GetBinaryFunctionOperators('(', ')', ','),
+				UnaryFunctionParsers:  exampleOdata.GetUnaryFunctionOperators('(', ')'),
 				Separator:             ";",
 			},
 			query:               "name eq 'John' and (concat(lastname,concat(' ', name)) eq 'Smith John' or contains(concat(name,lastname),'Smith') or length(concat(name,lastname)) eq 10)",
@@ -396,8 +407,8 @@ func TestConstructTree_ReturnsError(t *testing.T) {
 			syntaxTree: SyntaxTree{
 				OperatorPrecedence:    exampleMath.OperatorPrecedence,
 				OperatorParsers:       exampleMath.OperatorParsers,
-				BinaryFunctionParsers: exampleMath.GetBinaryFunctionOperators("(", ")", ','),
-				UnaryFunctionParsers:  exampleMath.GetUnaryFunctionOperators("(", ")"),
+				BinaryFunctionParsers: exampleMath.GetBinaryFunctionOperators('(', ')', ','),
+				UnaryFunctionParsers:  exampleMath.GetUnaryFunctionOperators('(', ')'),
 				Separator:             ";",
 			},
 			query:            "(1+2))*3",
@@ -407,8 +418,8 @@ func TestConstructTree_ReturnsError(t *testing.T) {
 			syntaxTree: SyntaxTree{
 				OperatorPrecedence:    exampleMath.OperatorPrecedence,
 				OperatorParsers:       exampleMath.OperatorParsers,
-				BinaryFunctionParsers: exampleMath.GetBinaryFunctionOperators("(", ")", ','),
-				UnaryFunctionParsers:  exampleMath.GetUnaryFunctionOperators("(", ")"),
+				BinaryFunctionParsers: exampleMath.GetBinaryFunctionOperators('(', ')', ','),
+				UnaryFunctionParsers:  exampleMath.GetUnaryFunctionOperators('(', ')'),
 				Separator:             ";",
 			},
 			query:            "(1+(2*3)",
@@ -443,8 +454,8 @@ func TestConstructTree_ReturnsNoError(t *testing.T) {
 			syntaxTree: SyntaxTree{
 				OperatorPrecedence:    exampleMath.OperatorPrecedence,
 				OperatorParsers:       exampleMath.OperatorParsers,
-				BinaryFunctionParsers: exampleMath.GetBinaryFunctionOperators("(", ")", ','),
-				UnaryFunctionParsers:  exampleMath.GetUnaryFunctionOperators("(", ")"),
+				BinaryFunctionParsers: exampleMath.GetBinaryFunctionOperators('(', ')', ','),
+				UnaryFunctionParsers:  exampleMath.GetUnaryFunctionOperators('(', ')'),
 				Separator:             ";",
 			},
 			query: "1+2*3",
@@ -453,8 +464,8 @@ func TestConstructTree_ReturnsNoError(t *testing.T) {
 			syntaxTree: SyntaxTree{
 				OperatorPrecedence:    exampleMath.OperatorPrecedence,
 				OperatorParsers:       exampleMath.OperatorParsers,
-				BinaryFunctionParsers: exampleMath.GetBinaryFunctionOperators("(", ")", ','),
-				UnaryFunctionParsers:  exampleMath.GetUnaryFunctionOperators("(", ")"),
+				BinaryFunctionParsers: exampleMath.GetBinaryFunctionOperators('(', ')', ','),
+				UnaryFunctionParsers:  exampleMath.GetUnaryFunctionOperators('(', ')'),
 				Separator:             ";",
 			},
 			query: "(1+2)*3",
@@ -463,8 +474,8 @@ func TestConstructTree_ReturnsNoError(t *testing.T) {
 			syntaxTree: SyntaxTree{
 				OperatorPrecedence:    exampleMath.OperatorPrecedence,
 				OperatorParsers:       exampleMath.OperatorParsers,
-				BinaryFunctionParsers: exampleMath.GetBinaryFunctionOperators("(", ")", ','),
-				UnaryFunctionParsers:  exampleMath.GetUnaryFunctionOperators("(", ")"),
+				BinaryFunctionParsers: exampleMath.GetBinaryFunctionOperators('(', ')', ','),
+				UnaryFunctionParsers:  exampleMath.GetUnaryFunctionOperators('(', ')'),
 				Separator:             ";",
 			},
 			query: "(1+2)*sqrt(3)",
@@ -473,8 +484,8 @@ func TestConstructTree_ReturnsNoError(t *testing.T) {
 			syntaxTree: SyntaxTree{
 				OperatorPrecedence:    exampleMath.OperatorPrecedence,
 				OperatorParsers:       exampleMath.OperatorParsers,
-				BinaryFunctionParsers: exampleMath.GetBinaryFunctionOperators("(", ")", ','),
-				UnaryFunctionParsers:  exampleMath.GetUnaryFunctionOperators("(", ")"),
+				BinaryFunctionParsers: exampleMath.GetBinaryFunctionOperators('(', ')', ','),
+				UnaryFunctionParsers:  exampleMath.GetUnaryFunctionOperators('(', ')'),
 				Separator:             ";",
 			},
 			query: "(1+2)*sqrt(pow(2,pow(3,3)))",
@@ -483,8 +494,8 @@ func TestConstructTree_ReturnsNoError(t *testing.T) {
 			syntaxTree: SyntaxTree{
 				OperatorPrecedence:    exampleMath.OperatorPrecedence,
 				OperatorParsers:       exampleMath.OperatorParsers,
-				BinaryFunctionParsers: exampleMath.GetBinaryFunctionOperators("(", ")", ','),
-				UnaryFunctionParsers:  exampleMath.GetUnaryFunctionOperators("(", ")"),
+				BinaryFunctionParsers: exampleMath.GetBinaryFunctionOperators('(', ')', ','),
+				UnaryFunctionParsers:  exampleMath.GetUnaryFunctionOperators('(', ')'),
 				Separator:             ";",
 			},
 			query: "1-sqrt(pow(2,3)+1)*2/(sqrt(1+1)*pow(3,pow(3,2)))",
@@ -493,8 +504,8 @@ func TestConstructTree_ReturnsNoError(t *testing.T) {
 			syntaxTree: SyntaxTree{
 				OperatorPrecedence:    exampleOdata.OperatorPrecedence,
 				OperatorParsers:       exampleOdata.OperatorParsers,
-				BinaryFunctionParsers: exampleOdata.GetBinaryFunctionOperators("(", ")", ','),
-				UnaryFunctionParsers:  exampleOdata.GetUnaryFunctionOperators("(", ")"),
+				BinaryFunctionParsers: exampleOdata.GetBinaryFunctionOperators('(', ')', ','),
+				UnaryFunctionParsers:  exampleOdata.GetUnaryFunctionOperators('(', ')'),
 				Separator:             ";",
 			},
 			query: "name eq 'John' and (concat(lastname,concat(' ', name)) eq 'Smith John' or contains(concat(name,lastname),'Smith') or length(concat(name,lastname)) eq 10)",
@@ -528,8 +539,8 @@ func TestConstructTree_CreatesCorrectGraph(t *testing.T) {
 			syntaxTree: SyntaxTree{
 				OperatorPrecedence:    exampleMath.OperatorPrecedence,
 				OperatorParsers:       exampleMath.OperatorParsers,
-				BinaryFunctionParsers: exampleMath.GetBinaryFunctionOperators("(", ")", ','),
-				UnaryFunctionParsers:  exampleMath.GetUnaryFunctionOperators("(", ")"),
+				BinaryFunctionParsers: exampleMath.GetBinaryFunctionOperators('(', ')', ','),
+				UnaryFunctionParsers:  exampleMath.GetUnaryFunctionOperators('(', ')'),
 				Separator:             ";",
 			},
 			query: "1+2*3",
@@ -544,8 +555,8 @@ func TestConstructTree_CreatesCorrectGraph(t *testing.T) {
 			syntaxTree: SyntaxTree{
 				OperatorPrecedence:    exampleMath.OperatorPrecedence,
 				OperatorParsers:       exampleMath.OperatorParsers,
-				BinaryFunctionParsers: exampleMath.GetBinaryFunctionOperators("(", ")", ','),
-				UnaryFunctionParsers:  exampleMath.GetUnaryFunctionOperators("(", ")"),
+				BinaryFunctionParsers: exampleMath.GetBinaryFunctionOperators('(', ')', ','),
+				UnaryFunctionParsers:  exampleMath.GetUnaryFunctionOperators('(', ')'),
 				Separator:             ";",
 			},
 			query: "(1+2)*3",
@@ -560,8 +571,8 @@ func TestConstructTree_CreatesCorrectGraph(t *testing.T) {
 			syntaxTree: SyntaxTree{
 				OperatorPrecedence:    exampleMath.OperatorPrecedence,
 				OperatorParsers:       exampleMath.OperatorParsers,
-				BinaryFunctionParsers: exampleMath.GetBinaryFunctionOperators("(", ")", ','),
-				UnaryFunctionParsers:  exampleMath.GetUnaryFunctionOperators("(", ")"),
+				BinaryFunctionParsers: exampleMath.GetBinaryFunctionOperators('(', ')', ','),
+				UnaryFunctionParsers:  exampleMath.GetUnaryFunctionOperators('(', ')'),
 				Separator:             ";",
 			},
 			query: "(1+2)*sqrt(3)",
@@ -577,8 +588,8 @@ func TestConstructTree_CreatesCorrectGraph(t *testing.T) {
 			syntaxTree: SyntaxTree{
 				OperatorPrecedence:    exampleMath.OperatorPrecedence,
 				OperatorParsers:       exampleMath.OperatorParsers,
-				BinaryFunctionParsers: exampleMath.GetBinaryFunctionOperators("(", ")", ','),
-				UnaryFunctionParsers:  exampleMath.GetUnaryFunctionOperators("(", ")"),
+				BinaryFunctionParsers: exampleMath.GetBinaryFunctionOperators('(', ')', ','),
+				UnaryFunctionParsers:  exampleMath.GetUnaryFunctionOperators('(', ')'),
 				Separator:             ";",
 			},
 			query: "(1+2)*sqrt(pow(2,pow(3,sqrt(3))))",
@@ -599,8 +610,8 @@ func TestConstructTree_CreatesCorrectGraph(t *testing.T) {
 			syntaxTree: SyntaxTree{
 				OperatorPrecedence:    exampleMath.OperatorPrecedence,
 				OperatorParsers:       exampleMath.OperatorParsers,
-				BinaryFunctionParsers: exampleMath.GetBinaryFunctionOperators("(", ")", ','),
-				UnaryFunctionParsers:  exampleMath.GetUnaryFunctionOperators("(", ")"),
+				BinaryFunctionParsers: exampleMath.GetBinaryFunctionOperators('(', ')', ','),
+				UnaryFunctionParsers:  exampleMath.GetUnaryFunctionOperators('(', ')'),
 				Separator:             ";",
 			},
 			query: "1-sqrt(pow(2,3)+1)*2/(sqrt(1+1)*pow(3+3,pow(3,sqrt(2))))",
@@ -634,8 +645,8 @@ func TestConstructTree_CreatesCorrectGraph(t *testing.T) {
 			syntaxTree: SyntaxTree{
 				OperatorPrecedence:    exampleOdata.OperatorPrecedence,
 				OperatorParsers:       exampleOdata.OperatorParsers,
-				BinaryFunctionParsers: exampleOdata.GetBinaryFunctionOperators("(", ")", ','),
-				UnaryFunctionParsers:  exampleOdata.GetUnaryFunctionOperators("(", ")"),
+				BinaryFunctionParsers: exampleOdata.GetBinaryFunctionOperators('(', ')', ','),
+				UnaryFunctionParsers:  exampleOdata.GetUnaryFunctionOperators('(', ')'),
 				Separator:             "|",
 			},
 			query: "name eq 'John' and (concat(lastname,concat(' ', name)) eq 'Smith John' or contains(concat(name,lastname),'Smith') or length(concat(name,lastname)) eq 10)",
