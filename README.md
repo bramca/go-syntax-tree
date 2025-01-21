@@ -46,8 +46,8 @@ func firstExample() {
 	for i, binaryFunction := range binaryFunctions {
 		binaryFunctionParsers[i] = syntaxtree.BinaryFunctionParser{
 			FunctionName:     binaryFunction,
-			OpeningDelimiter: "(",
-			ClosingDelimiter: ")",
+			OpeningDelimiter: '(',
+			ClosingDelimiter: ')',
 			OperandSeparator: ',',
 		}
 	}
@@ -60,8 +60,8 @@ func firstExample() {
 	for i, unaryFunction := range unaryFunctions {
 		unaryFunctionParsers[i] = syntaxtree.UnaryFunctionParser{
 			FunctionName:     unaryFunction,
-			OpeningDelimiter: "(",
-			ClosingDelimiter: ")",
+			OpeningDelimiter: '(',
+			ClosingDelimiter: ')',
 		}
 	}
 
