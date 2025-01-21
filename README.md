@@ -13,7 +13,6 @@ This can be used to write the `SyntaxTree` to a `.dot` file that can be parsed t
 ## 📋 Example
 
 ```go
-
 import (
 	"fmt"
 	"regexp"
