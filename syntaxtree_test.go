@@ -366,6 +366,17 @@ func TestParseQuery_ReturnsCorrectQuery(t *testing.T) {
 			query:               "1-sqrt{pow[2,3]+1}*2/(sqrt{1+1}*pow[3+3,pow[3,sqrt{2}]])",
 			expectedParsedQuery: "1;-;sqrt;(;(;2;);pow;(;3;);+;1;);*;2;/;(;sqrt;(;1;+;1;);*;(;3;+;3;);pow;(;(;3;);pow;(;sqrt;(;2;);););)",
 		},
+		"odata simple example": {
+			syntaxTree: SyntaxTree{
+				OperatorPrecedence:    exampleOdata.OperatorPrecedence,
+				OperatorParsers:       exampleOdata.OperatorParsers,
+				BinaryFunctionParsers: exampleOdata.GetBinaryFunctionOperators('(', ')', ','),
+				UnaryFunctionParsers:  exampleOdata.GetUnaryFunctionOperators('(', ')'),
+				Separator:             ";",
+			},
+			query:               "toupper(tolower(name)) eq 'JOHN'",
+			expectedParsedQuery: "toupper;(;tolower;(;name;););eq;'JOHN'",
+		},
 		"odata complex example": {
 			syntaxTree: SyntaxTree{
 				OperatorPrecedence:    exampleOdata.OperatorPrecedence,
@@ -639,6 +650,22 @@ func TestConstructTree_CreatesCorrectGraph(t *testing.T) {
 	"10 [/]" -- "15 [*]"
 	"8 [*]" -- "10 [/]"
 	"1 [-]" -- "8 [*]"
+}`,
+		},
+		"odata simple example": {
+			syntaxTree: SyntaxTree{
+				OperatorPrecedence:    exampleOdata.OperatorPrecedence,
+				OperatorParsers:       exampleOdata.OperatorParsers,
+				BinaryFunctionParsers: exampleOdata.GetBinaryFunctionOperators('(', ')', ','),
+				UnaryFunctionParsers:  exampleOdata.GetUnaryFunctionOperators('(', ')'),
+				Separator:             ";",
+			},
+			query: "toupper(tolower(name)) eq 'JOHN'",
+			expectedGraph: `graph {
+	"1 [tolower]" -- "2 [name]"
+	"0 [toupper]" -- "1 [tolower]"
+	"3 [eq]" -- "0 [toupper]"
+	"3 [eq]" -- "4 ['JOHN']"
 }`,
 		},
 		"odata complex example": {

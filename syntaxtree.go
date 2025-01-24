@@ -170,7 +170,7 @@ func (t *SyntaxTree) ParseQuery(query string) (string, error) {
 	}
 
 	for _, unaryFunctionParser := range t.UnaryFunctionParsers {
-		for firstIndex := strings.Index(query, unaryFunctionParser.FunctionName+string(unaryFunctionParser.OpeningDelimiter)); firstIndex > 0; firstIndex = strings.Index(query, unaryFunctionParser.FunctionName+string(unaryFunctionParser.OpeningDelimiter)) {
+		for firstIndex := strings.Index(query, unaryFunctionParser.FunctionName+string(unaryFunctionParser.OpeningDelimiter)); firstIndex >= 0; firstIndex = strings.Index(query, unaryFunctionParser.FunctionName+string(unaryFunctionParser.OpeningDelimiter)) {
 			delimiterCount := 0
 			totalFuncString := ""
 			totalFuncIndex := 0
@@ -336,10 +336,17 @@ func createTree(t *SyntaxTree, parsedQuery string, startId int) (*Node, int) {
 			continue
 		}
 
+		nodeType := LeftOperand
+		for _, unaryFunction := range t.UnaryFunctionParsers {
+			if parsedQueryPart == unaryFunction.FunctionName {
+				nodeType = UnaryOperator
+			}
+		}
+
 		previousNode = currentNode
 		currentNode = &Node{
 			Id:    id,
-			Type:  LeftOperand,
+			Type:  nodeType,
 			Value: parsedQueryPart,
 		}
 
