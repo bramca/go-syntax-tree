@@ -116,11 +116,11 @@ func (t *SyntaxTree) ParseQuery(query string) (string, error) {
 	}
 
 	if delimiterCount > 0 {
-		return "", errors.New("Missing closing bracket ')'")
+		return "", errors.New("missing closing bracket ')'")
 	}
 
 	if delimiterCount < 0 {
-		return "", errors.New("Missing opening bracket '('")
+		return "", errors.New("missing opening bracket '('")
 	}
 
 	// TODO: Add more checks for parsing (e.g. operators missing an operand, operands missing an operator or function, ...)
@@ -139,7 +139,7 @@ func (t *SyntaxTree) ParseQuery(query string) (string, error) {
 	}
 
 	for _, binaryFunctionParser := range t.BinaryFunctionParsers {
-		for firstIndex := strings.Index(query, binaryFunctionParser.FunctionName+string(binaryFunctionParser.OpeningDelimiter)); firstIndex > 0; firstIndex = strings.Index(query, binaryFunctionParser.FunctionName+string(binaryFunctionParser.OpeningDelimiter)) {
+		for firstIndex := strings.Index(query, binaryFunctionParser.FunctionName+string(binaryFunctionParser.OpeningDelimiter)); firstIndex >= 0; firstIndex = strings.Index(query, binaryFunctionParser.FunctionName+string(binaryFunctionParser.OpeningDelimiter)) {
 			delimiterCount := 0
 			totalFuncString := ""
 			totalFuncIndex := 0
@@ -343,7 +343,6 @@ func createTree(t *SyntaxTree, parsedQuery string, startId int) (*Node, int) {
 			}
 		}
 
-		previousNode = currentNode
 		currentNode = &Node{
 			Id:    id,
 			Type:  nodeType,

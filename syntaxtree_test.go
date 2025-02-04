@@ -259,7 +259,7 @@ func TestParseQuery_ReturnsError(t *testing.T) {
 				Separator:             ";",
 			},
 			query:            "(",
-			expectedErrorMsg: "Missing closing bracket ')'",
+			expectedErrorMsg: "missing closing bracket ')'",
 		},
 		"missing opening bracket": {
 			syntaxTree: SyntaxTree{
@@ -270,7 +270,7 @@ func TestParseQuery_ReturnsError(t *testing.T) {
 				Separator:             ";",
 			},
 			query:            "())",
-			expectedErrorMsg: "Missing opening bracket '('",
+			expectedErrorMsg: "missing opening bracket '('",
 		},
 	}
 
@@ -388,6 +388,17 @@ func TestParseQuery_ReturnsCorrectQuery(t *testing.T) {
 			query:               "name eq 'John' and (concat(lastname,concat(' ', name)) eq 'Smith John' or contains(concat(name,lastname),'Smith') or length(concat(name,lastname)) eq 10)",
 			expectedParsedQuery: "name;eq;'John';and;(;(;lastname;);concat;(;(;' ';);concat;(; name;););eq;'Smith John';or;(;(;name;);concat;(;lastname;););contains;(;'Smith';);or;length;(;(;name;);concat;(;lastname;););eq;10;)",
 		},
+		"odata complex example 2": {
+			syntaxTree: SyntaxTree{
+				OperatorPrecedence:    exampleOdata.OperatorPrecedence,
+				OperatorParsers:       exampleOdata.OperatorParsers,
+				BinaryFunctionParsers: exampleOdata.GetBinaryFunctionOperators('(', ')', ','),
+				UnaryFunctionParsers:  exampleOdata.GetUnaryFunctionOperators('(', ')'),
+				Separator:             ";",
+			},
+			query:               "contains(concat(name,lastname),'Smith') or length(concat(name,lastname)) eq 10) and name eq 'John' and (concat(lastname,concat(' ', name)) eq 'Smith John'",
+			expectedParsedQuery: "(;(;name;);concat;(;lastname;););contains;(;'Smith';);or;length;(;(;name;);concat;(;lastname;););eq;10;);and;name;eq;'John';and;(;(;lastname;);concat;(;(;' ';);concat;(; name;););eq;'Smith John'",
+		},
 	}
 
 	for name, testData := range tests {
@@ -423,7 +434,7 @@ func TestConstructTree_ReturnsError(t *testing.T) {
 				Separator:             ";",
 			},
 			query:            "(1+2))*3",
-			expectedErrorMsg: "Missing opening bracket '('",
+			expectedErrorMsg: "missing opening bracket '('",
 		},
 		"example missing closing bracket": {
 			syntaxTree: SyntaxTree{
@@ -434,7 +445,7 @@ func TestConstructTree_ReturnsError(t *testing.T) {
 				Separator:             ";",
 			},
 			query:            "(1+(2*3)",
-			expectedErrorMsg: "Missing closing bracket ')'",
+			expectedErrorMsg: "missing closing bracket ')'",
 		},
 	}
 
@@ -717,7 +728,7 @@ func TestConstructTree_CreatesCorrectGraph(t *testing.T) {
 
 			// Assert
 			NoError(t, err)
-			Equal(t, fmt.Sprintf("%s", syntaxTree), testData.expectedGraph)
+			Equal(t, syntaxTree.String(), testData.expectedGraph)
 		})
 	}
 }
