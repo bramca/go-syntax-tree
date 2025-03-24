@@ -1,7 +1,6 @@
 package syntaxtree
 
 import (
-	"errors"
 	"fmt"
 	"regexp"
 	"slices"
@@ -118,13 +117,11 @@ func (t *SyntaxTree) ParseQuery(query string) (string, error) {
 	}
 
 	if delimiterCount > 0 {
-		// TODO: change to wrapped static error
-		return "", errors.New("missing closing bracket ')'")
+		return "", &ParseError{Msg: "missing closing bracket ')'"}
 	}
 
 	if delimiterCount < 0 {
-		// TODO: change to wrapped static error
-		return "", errors.New("missing opening bracket '('")
+		return "", &ParseError{Msg: "missing opening bracket '('"}
 	}
 
 	// TODO: Add more checks for parsing (e.g. operators missing an operand, operands missing an operator or function, ...)
@@ -222,13 +219,11 @@ func (t *SyntaxTree) ParseQuery(query string) (string, error) {
 	}
 
 	if delimiterCount < 0 {
-		// TODO: change to wrapped static error
-		return "", errors.New(fmt.Sprintf("failed to parse query, possible typo in \"%s\"", strings.Join(parsedQuerySplit[lastOpeningIndex:lastClosingIndex], " ")))
+		return "", &ParseError{Msg: fmt.Sprintf("possible typo in %q", strings.Join(parsedQuerySplit[lastOpeningIndex:lastClosingIndex], " "))}
 	}
 
 	if delimiterCount > 0 {
-		// TODO: change to wrapped static error
-		return "", errors.New(fmt.Sprintf("failed to parse query, possible typo in \"%s\"", strings.Join(parsedQuerySplit[lastOpeningIndex:], " ")))
+		return "", &ParseError{Msg: fmt.Sprintf("possible typo in %q", strings.Join(parsedQuerySplit[lastOpeningIndex:], " "))}
 	}
 
 	return query, nil

@@ -260,7 +260,7 @@ func TestParseQuery_ReturnsError(t *testing.T) {
 				Separator:             ";",
 			},
 			query:            "(",
-			expectedErrorMsg: "missing closing bracket ')'",
+			expectedErrorMsg: "failed to parse query: missing closing bracket ')'",
 		},
 		"missing opening bracket": {
 			syntaxTree: SyntaxTree{
@@ -271,7 +271,7 @@ func TestParseQuery_ReturnsError(t *testing.T) {
 				Separator:             ";",
 			},
 			query:            "())",
-			expectedErrorMsg: "missing opening bracket '('",
+			expectedErrorMsg: "failed to parse query: missing opening bracket '('",
 		},
 	}
 
@@ -436,7 +436,7 @@ func TestConstructTree_ReturnsError(t *testing.T) {
 				Separator:             ";",
 			},
 			query:            "(1+2))*3",
-			expectedErrorMsg: "missing opening bracket '('",
+			expectedErrorMsg: "failed to parse query: missing opening bracket '('",
 		},
 		"example missing closing bracket": {
 			syntaxTree: SyntaxTree{
@@ -447,7 +447,7 @@ func TestConstructTree_ReturnsError(t *testing.T) {
 				Separator:             ";",
 			},
 			query:            "(1+(2*3)",
-			expectedErrorMsg: "missing closing bracket ')'",
+			expectedErrorMsg: "failed to parse query: missing closing bracket ')'",
 		},
 		"example parsing error typo last part": {
 			syntaxTree: SyntaxTree{
@@ -458,7 +458,7 @@ func TestConstructTree_ReturnsError(t *testing.T) {
 				Separator:             ";",
 			},
 			query:            "concat('#',name) qe '#test'",
-			expectedErrorMsg: "failed to parse query, possible typo in \"( name ) qe '#test'\"",
+			expectedErrorMsg: "failed to parse query: possible typo in \"( name ) qe '#test'\"",
 		},
 		"example parsing error typo first part": {
 			syntaxTree: SyntaxTree{
@@ -469,7 +469,7 @@ func TestConstructTree_ReturnsError(t *testing.T) {
 				Separator:             ";",
 			},
 			query:            "conct('#',name) eq '#test'",
-			expectedErrorMsg: "failed to parse query, possible typo in \"conct( '#',name\"",
+			expectedErrorMsg: "failed to parse query: possible typo in \"conct( '#',name\"",
 		},
 	}
 
