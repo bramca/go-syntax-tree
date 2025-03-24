@@ -13,7 +13,7 @@ type Example struct {
 	UnaryFunctions     []string
 }
 
-func (e Example) GetBinaryFunctionOperators(openingDelimiter byte, closingDelimiter byte, operatndSeparator byte) []BinaryFunctionParser {
+func (e *Example) GetBinaryFunctionOperators(openingDelimiter byte, closingDelimiter byte, operatndSeparator byte) []BinaryFunctionParser {
 	binaryFunctionParsers := make([]BinaryFunctionParser, len(e.BinaryFunctions))
 	for i, binaryFunction := range e.BinaryFunctions {
 		binaryFunctionParsers[i] = BinaryFunctionParser{
@@ -27,7 +27,7 @@ func (e Example) GetBinaryFunctionOperators(openingDelimiter byte, closingDelimi
 	return binaryFunctionParsers
 }
 
-func (e Example) GetUnaryFunctionOperators(openingDelimiter byte, closingDelimiter byte) []UnaryFunctionParser {
+func (e *Example) GetUnaryFunctionOperators(openingDelimiter byte, closingDelimiter byte) []UnaryFunctionParser {
 	unaryFunctionParsers := make([]UnaryFunctionParser, len(e.UnaryFunctions))
 	for i, unaryFunction := range e.UnaryFunctions {
 		unaryFunctionParsers[i] = UnaryFunctionParser{
@@ -234,6 +234,7 @@ func TestNodeTypeString_ReturnsCorrectValue(t *testing.T) {
 	for name, testData := range tests {
 		testData := testData
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			// Act
 			result := testData.nodeType.String()
 
@@ -404,6 +405,7 @@ func TestParseQuery_ReturnsCorrectQuery(t *testing.T) {
 	for name, testData := range tests {
 		testData := testData
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			// Arrange
 			syntaxTree := testData.syntaxTree
 			query := testData.query
@@ -447,11 +449,34 @@ func TestConstructTree_ReturnsError(t *testing.T) {
 			query:            "(1+(2*3)",
 			expectedErrorMsg: "missing closing bracket ')'",
 		},
+		"example parsing error typo last part": {
+			syntaxTree: SyntaxTree{
+				OperatorPrecedence:    exampleOdata.OperatorPrecedence,
+				OperatorParsers:       exampleOdata.OperatorParsers,
+				BinaryFunctionParsers: exampleOdata.GetBinaryFunctionOperators('(', ')', ','),
+				UnaryFunctionParsers:  exampleMath.GetUnaryFunctionOperators('(', ')'),
+				Separator:             ";",
+			},
+			query:            "concat('#',name) qe '#test'",
+			expectedErrorMsg: "failed to parse query, possible typo in \"( name ) qe '#test'\"",
+		},
+		"example parsing error typo first part": {
+			syntaxTree: SyntaxTree{
+				OperatorPrecedence:    exampleOdata.OperatorPrecedence,
+				OperatorParsers:       exampleOdata.OperatorParsers,
+				BinaryFunctionParsers: exampleOdata.GetBinaryFunctionOperators('(', ')', ','),
+				UnaryFunctionParsers:  exampleMath.GetUnaryFunctionOperators('(', ')'),
+				Separator:             ";",
+			},
+			query:            "conct('#',name) eq '#test'",
+			expectedErrorMsg: "failed to parse query, possible typo in \"conct( '#',name\"",
+		},
 	}
 
 	for name, testData := range tests {
 		testData := testData
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			// Arrange
 			syntaxTree := testData.syntaxTree
 			query := testData.query
@@ -537,6 +562,7 @@ func TestConstructTree_ReturnsNoError(t *testing.T) {
 	for name, testData := range tests {
 		testData := testData
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			// Arrange
 			syntaxTree := testData.syntaxTree
 			query := testData.query
@@ -719,6 +745,7 @@ func TestConstructTree_CreatesCorrectGraph(t *testing.T) {
 	for name, testData := range tests {
 		testData := testData
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			// Arrange
 			syntaxTree := testData.syntaxTree
 			query := testData.query

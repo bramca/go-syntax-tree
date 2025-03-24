@@ -28,9 +28,11 @@ func (e NodeType) String() string {
 		return "LeftOperand"
 	case RightOperand:
 		return "RightOperand"
+	case Unknown:
+		return "Unknown"
+	default:
+		return "Unknown"
 	}
-
-	return "Unknown"
 }
 
 // SyntaxTree
@@ -106,20 +108,22 @@ func (t *SyntaxTree) ParseQuery(query string) (string, error) {
 
 	// Check query for missing brackets
 	delimiterCount := 0
-	for i := 0; i < len(query); i++ {
-		if query[i] == '(' {
+	for _, queryPart := range query {
+		if queryPart == '(' {
 			delimiterCount++
 		}
-		if query[i] == ')' {
+		if queryPart == ')' {
 			delimiterCount--
 		}
 	}
 
 	if delimiterCount > 0 {
+		// TODO: change to wrapped static error
 		return "", errors.New("missing closing bracket ')'")
 	}
 
 	if delimiterCount < 0 {
+		// TODO: change to wrapped static error
 		return "", errors.New("missing opening bracket '('")
 	}
 
@@ -152,6 +156,7 @@ func (t *SyntaxTree) ParseQuery(query string) (string, error) {
 					delimiterCount--
 					if delimiterCount == 0 {
 						totalFuncString += string(query[i])
+
 						break
 					}
 				}
@@ -182,6 +187,7 @@ func (t *SyntaxTree) ParseQuery(query string) (string, error) {
 					delimiterCount--
 					if delimiterCount == 0 {
 						totalFuncString += string(query[i])
+
 						break
 					}
 				}
@@ -198,6 +204,32 @@ func (t *SyntaxTree) ParseQuery(query string) (string, error) {
 
 	query = strings.ReplaceAll(query, "(", "("+t.Separator)
 	query = strings.ReplaceAll(query, ")", t.Separator+")")
+
+	// check for possible typos, resulting in parse failure
+	parsedQuerySplit := strings.Split(query, t.Separator)
+	delimiterCount = 0
+	lastOpeningIndex := 0
+	lastClosingIndex := 0
+	for index, queryPart := range parsedQuerySplit {
+		if queryPart == "(" {
+			delimiterCount++
+			lastOpeningIndex = index
+		}
+		if queryPart == ")" {
+			delimiterCount--
+			lastClosingIndex = index
+		}
+	}
+
+	if delimiterCount < 0 {
+		// TODO: change to wrapped static error
+		return "", errors.New(fmt.Sprintf("failed to parse query, possible typo in \"%s\"", strings.Join(parsedQuerySplit[lastOpeningIndex:lastClosingIndex], " ")))
+	}
+
+	if delimiterCount > 0 {
+		// TODO: change to wrapped static error
+		return "", errors.New(fmt.Sprintf("failed to parse query, possible typo in \"%s\"", strings.Join(parsedQuerySplit[lastOpeningIndex:], " ")))
+	}
 
 	return query, nil
 }
@@ -226,6 +258,7 @@ func createTree(t *SyntaxTree, parsedQuery string, startId int) (*Node, int) {
 				}
 				if delimiterCount == 0 {
 					closingIndex = i
+
 					break
 				}
 			}
@@ -266,6 +299,7 @@ func createTree(t *SyntaxTree, parsedQuery string, startId int) (*Node, int) {
 				t.Nodes = append(t.Nodes, currentNode)
 
 				id++
+
 				continue
 			}
 			if previousNode != nil && operatorType == UnaryOperator {
@@ -284,6 +318,7 @@ func createTree(t *SyntaxTree, parsedQuery string, startId int) (*Node, int) {
 				t.Nodes = append(t.Nodes, currentNode)
 
 				id++
+
 				continue
 			}
 			for previousNode.Parent != nil {
@@ -317,6 +352,7 @@ func createTree(t *SyntaxTree, parsedQuery string, startId int) (*Node, int) {
 			t.Nodes = append(t.Nodes, currentNode)
 
 			id++
+
 			continue
 		}
 
@@ -333,6 +369,7 @@ func createTree(t *SyntaxTree, parsedQuery string, startId int) (*Node, int) {
 			t.Nodes = append(t.Nodes, currentNode)
 
 			id++
+
 			continue
 		}
 
@@ -369,10 +406,12 @@ func (t SyntaxTree) String() string {
 		if currentNode.Type == Operator || currentNode.Type == UnaryOperator {
 			if currentNode.LeftChild != nil && !nodesVisited[currentNode.LeftChild.Id] {
 				currentNode = currentNode.LeftChild
+
 				continue
 			}
 			if currentNode.RightChild != nil && !nodesVisited[currentNode.RightChild.Id] {
 				currentNode = currentNode.RightChild
+
 				continue
 			}
 		}
