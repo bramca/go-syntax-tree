@@ -245,7 +245,7 @@ func TestNodeTypeString_ReturnsCorrectValue(t *testing.T) {
 }
 
 func TestParseQuery_ReturnsError(t *testing.T) {
-	t.Parallel()
+	// t.Parallel()
 	tests := map[string]struct {
 		syntaxTree       SyntaxTree
 		query            string
@@ -273,12 +273,67 @@ func TestParseQuery_ReturnsError(t *testing.T) {
 			query:            "())",
 			expectedErrorMsg: "failed to parse query: missing opening bracket '('",
 		},
+		"operator missing operand - 1": {
+			syntaxTree: SyntaxTree{
+				OperatorPrecedence:    exampleOdata.OperatorPrecedence,
+				OperatorParsers:       exampleOdata.OperatorParsers,
+				BinaryFunctionParsers: exampleOdata.GetBinaryFunctionOperators('(', ')', ','),
+				UnaryFunctionParsers:  exampleOdata.GetUnaryFunctionOperators('(', ')'),
+				Separator:             ";",
+			},
+			query:            "name eq or name eq 'value'",
+			expectedErrorMsg: "?",
+		},
+		"operator missing operand - 2": {
+			syntaxTree: SyntaxTree{
+				OperatorPrecedence:    exampleOdata.OperatorPrecedence,
+				OperatorParsers:       exampleOdata.OperatorParsers,
+				BinaryFunctionParsers: exampleOdata.GetBinaryFunctionOperators('(', ')', ','),
+				UnaryFunctionParsers:  exampleOdata.GetUnaryFunctionOperators('(', ')'),
+				Separator:             ";",
+			},
+			query:            "or name eq 'value'",
+			expectedErrorMsg: "?",
+		},
+		"operator missing operand - 3": {
+			syntaxTree: SyntaxTree{
+				OperatorPrecedence:    exampleOdata.OperatorPrecedence,
+				OperatorParsers:       exampleOdata.OperatorParsers,
+				BinaryFunctionParsers: exampleOdata.GetBinaryFunctionOperators('(', ')', ','),
+				UnaryFunctionParsers:  exampleOdata.GetUnaryFunctionOperators('(', ')'),
+				Separator:             ";",
+			},
+			query:            "id or name eq 'value'",
+			expectedErrorMsg: "?",
+		},
+		"binary function missing operand - 1": {
+			syntaxTree: SyntaxTree{
+				OperatorPrecedence:    exampleOdata.OperatorPrecedence,
+				OperatorParsers:       exampleOdata.OperatorParsers,
+				BinaryFunctionParsers: exampleOdata.GetBinaryFunctionOperators('(', ')', ','),
+				UnaryFunctionParsers:  exampleOdata.GetUnaryFunctionOperators('(', ')'),
+				Separator:             ";",
+			},
+			query:            "contains(name) or name eq 'value'",
+			expectedErrorMsg: "failed to parse query: function 'contains' is missing an operand",
+		},
+		"unary function missing operand - 1": {
+			syntaxTree: SyntaxTree{
+				OperatorPrecedence:    exampleOdata.OperatorPrecedence,
+				OperatorParsers:       exampleOdata.OperatorParsers,
+				BinaryFunctionParsers: exampleOdata.GetBinaryFunctionOperators('(', ')', ','),
+				UnaryFunctionParsers:  exampleOdata.GetUnaryFunctionOperators('(', ')'),
+				Separator:             ";",
+			},
+			query:            "length() ge 5",
+			expectedErrorMsg: "failed to parse query: function 'length' is missing an operand",
+		},
 	}
 
 	for name, testData := range tests {
 		testData := testData
 		t.Run(name, func(t *testing.T) {
-			t.Parallel()
+			// t.Parallel()
 			// Arrange
 			syntaxTree := testData.syntaxTree
 			query := testData.query
@@ -289,7 +344,9 @@ func TestParseQuery_ReturnsError(t *testing.T) {
 			// Assert
 			Equal(t, parsedQuery, "")
 			Error(t, err)
-			Equal(t, err.Error(), testData.expectedErrorMsg)
+			if err != nil {
+				Equal(t, err.Error(), testData.expectedErrorMsg)
+			}
 		})
 	}
 }
