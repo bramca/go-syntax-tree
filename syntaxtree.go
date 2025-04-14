@@ -104,6 +104,7 @@ func (t *SyntaxTree) ConstructTree(query string) error {
 }
 
 func (t *SyntaxTree) ParseQuery(query string) (string, error) {
+	originalQuery := query
 	query = strings.Trim(query, " ")
 
 	// Check query for missing brackets
@@ -242,15 +243,15 @@ func (t *SyntaxTree) ParseQuery(query string) (string, error) {
 
 			leftOp := parsedQuerySplit[index - 1]
 			rightOp := parsedQuerySplit[index + 1]
-			checkLeftOpRegex := regexp.MustCompile(fmt.Sprintf(`(\)|\s+|%s|%s)`, strings.Join(slices.Collect(maps.Keys(operatorMap)), "|"), strings.Join(slices.Collect(maps.Keys(binaryFunctionMap)), "|")))
+			checkLeftOpRegex := regexp.MustCompile(fmt.Sprintf(`(\)|\s+|%s|%s)`, regexp.QuoteMeta(strings.Join(slices.Collect(maps.Keys(operatorMap)), "|")), regexp.QuoteMeta(strings.Join(slices.Collect(maps.Keys(binaryFunctionMap)), "|"))))
 			// TODO: check if left and right operand are one of the following
 			// - "(" [rightop] or ")" [leftop]
 			// - "no spaces" [leftop]
 			// - "no operator"
 			// - "no binary function [leftop]"
 
-			fmt.Printf("[%s] leftOp: %+v\n", queryPart, leftOp)
-			fmt.Printf("[%s] rightOp: %+v\n", queryPart, rightOp)
+			fmt.Printf("[%s,%d] leftOp: %+v\n", queryPart, index, leftOp)
+			fmt.Printf("[%s,%d] rightOp: %+v\n", queryPart, index, rightOp)
 
 			if checkLeftOpRegex.MatchString(leftOp) {
 				fmt.Printf("[%s] it matches query [%s]: '%s'\n", queryPart, query, leftOp)
@@ -273,6 +274,10 @@ func (t *SyntaxTree) ParseQuery(query string) (string, error) {
 
 	if delimiterCount > 0 {
 		return "", &ParseError{Msg: fmt.Sprintf("possible typo in %q", strings.Join(parsedQuerySplit[lastOpeningIndex:], " "))}
+	}
+
+	if originalQuery == query {
+		return "", &ParseError{Msg: fmt.Sprintf("possible typo in %q", originalQuery)}
 	}
 
 	return query, nil
