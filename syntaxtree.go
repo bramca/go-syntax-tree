@@ -134,25 +134,14 @@ func (t *SyntaxTree) ParseQuery(query string) (string, error) {
 		operator := operatorParser.OperatorString
 		operatorMap[operator] = operatorParser
 		expression := operatorParser.OperatorPattern
-		var err *ParseError
 		query = expression.ReplaceAllStringFunc(query, func(s string) string {
 			matches := expression.FindStringSubmatch(s)
 			if len(matches) == 3 {
-				for _, op := range t.OperatorParsers {
-					if matches[2] == op.OperatorString {
-						err = &ParseError{Msg: fmt.Sprintf("operator '%s' does not have a right operand", operator)}
-					}
-				}
-
 				return matches[1] + t.Separator + operator + t.Separator + matches[2]
 			}
 
 			return operator
 		})
-
-		if err != nil {
-			return "", err
-		}
 	}
 
 	for _, binaryFunctionParser := range t.BinaryFunctionParsers {

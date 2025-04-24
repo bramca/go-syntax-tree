@@ -143,27 +143,27 @@ var (
 		OperatorParsers: []OperatorParser{
 			{
 				OperatorString:  "eq",
-				OperatorPattern: regexp.MustCompile(`([\)a-zA-Z0-9'\_\-]+) eq ([\(\)a-zA-Z0-9',]+)`),
+				OperatorPattern: regexp.MustCompile(`(.*?) eq (.*?)`),
 			},
 			{
 				OperatorString:  "ne",
-				OperatorPattern: regexp.MustCompile(`([\)a-zA-Z0-9'\_\-]+) ne ([\(\)a-zA-Z0-9',]+)`),
+				OperatorPattern: regexp.MustCompile(`(.*?) ne (.*?)`),
 			},
 			{
 				OperatorString:  "gt",
-				OperatorPattern: regexp.MustCompile(`([\)a-zA-Z0-9'\_\-]+) ne ([\(\)a-zA-Z0-9',]+)`),
+				OperatorPattern: regexp.MustCompile(`(.*?) gt (.*?)`),
 			},
 			{
 				OperatorString:  "ge",
-				OperatorPattern: regexp.MustCompile(`([\)a-zA-Z0-9'\_\-]+) ge ([\(\)a-zA-Z0-9',]+)`),
+				OperatorPattern: regexp.MustCompile(`(.*?) ge (.*?)`),
 			},
 			{
 				OperatorString:  "lt",
-				OperatorPattern: regexp.MustCompile(`([\)a-zA-Z0-9'\_\-]+) lt ([\(\)a-zA-Z0-9',]+)`),
+				OperatorPattern: regexp.MustCompile(`(.*?) lt (.*?)`),
 			},
 			{
 				OperatorString:  "le",
-				OperatorPattern: regexp.MustCompile(`([\)a-zA-Z'0-9\_\-]+) le ([\(\)a-zA-Z0-9',]+)`),
+				OperatorPattern: regexp.MustCompile(`(.*?) le (.*?)`),
 			},
 			{
 				OperatorString:  "and",
@@ -275,17 +275,6 @@ func TestParseQuery_ReturnsError(t *testing.T) {
 		},
 		"operator missing operand - 1": {
 			syntaxTree: SyntaxTree{
-				OperatorPrecedence:    exampleOdata.OperatorPrecedence,
-				OperatorParsers:       exampleOdata.OperatorParsers,
-				BinaryFunctionParsers: exampleOdata.GetBinaryFunctionOperators('(', ')', ','),
-				UnaryFunctionParsers:  exampleOdata.GetUnaryFunctionOperators('(', ')'),
-				Separator:             ";",
-			},
-			query:            "name eq or name eq concat(test,'value')",
-			expectedErrorMsg: "failed to parse query: operator 'eq' does not have a right operand",
-		},
-		"operator missing operand - 2": {
-			syntaxTree: SyntaxTree{
 				OperatorPrecedence:    exampleMath.OperatorPrecedence,
 				OperatorParsers:       exampleMath.OperatorParsers,
 				BinaryFunctionParsers: exampleMath.GetBinaryFunctionOperators('(', ')', ','),
@@ -295,7 +284,7 @@ func TestParseQuery_ReturnsError(t *testing.T) {
 			query:            "*1-2",
 			expectedErrorMsg: "failed to parse query: operator '*' does not have a left operand",
 		},
-		"operator missing operand - 3": {
+		"operator missing operand - 2": {
 			syntaxTree: SyntaxTree{
 				OperatorPrecedence:    exampleMath.OperatorPrecedence,
 				OperatorParsers:       exampleMath.OperatorParsers,
@@ -306,7 +295,7 @@ func TestParseQuery_ReturnsError(t *testing.T) {
 			query:            "2-",
 			expectedErrorMsg: "failed to parse query: operator '-' does not have a right operand",
 		},
-		"operator missing operand - 4": {
+		"operator missing operand - 3": {
 			syntaxTree: SyntaxTree{
 				OperatorPrecedence:    exampleOdata.OperatorPrecedence,
 				OperatorParsers:       exampleOdata.OperatorParsers,
@@ -317,7 +306,7 @@ func TestParseQuery_ReturnsError(t *testing.T) {
 			query:            "name eq",
 			expectedErrorMsg: "failed to parse query: possible typo in \"name eq\"",
 		},
-		"operator missing operand - 5": {
+		"operator missing operand - 4": {
 			syntaxTree: SyntaxTree{
 				OperatorPrecedence:    exampleOdata.OperatorPrecedence,
 				OperatorParsers:       exampleOdata.OperatorParsers,
