@@ -2,7 +2,6 @@ package syntaxtree
 
 import (
 	"fmt"
-	"maps"
 	"regexp"
 	"slices"
 	"strings"
@@ -103,6 +102,7 @@ func (t *SyntaxTree) ConstructTree(query string) error {
 	return nil
 }
 
+//nolint:gocognit,gocyclo // complex function, no way around it
 func (t *SyntaxTree) ParseQuery(query string) (string, error) {
 	originalQuery := query
 	query = strings.Trim(query, " ")
@@ -126,7 +126,6 @@ func (t *SyntaxTree) ParseQuery(query string) (string, error) {
 		return "", &ParseError{Msg: "missing opening bracket '('"}
 	}
 
-	// TODO: Add more checks for parsing (e.g. operators missing an operand, operands missing an operator or function, ...)
 	operatorMap := map[string]OperatorParser{}
 	binaryFunctionMap := map[string]BinaryFunctionParser{}
 	unaryFunctionMap := map[string]UnaryFunctionParser{}
@@ -135,14 +134,25 @@ func (t *SyntaxTree) ParseQuery(query string) (string, error) {
 		operator := operatorParser.OperatorString
 		operatorMap[operator] = operatorParser
 		expression := operatorParser.OperatorPattern
+		var err *ParseError
 		query = expression.ReplaceAllStringFunc(query, func(s string) string {
 			matches := expression.FindStringSubmatch(s)
 			if len(matches) == 3 {
+				for _, op := range t.OperatorParsers {
+					if matches[2] == op.OperatorString {
+						err = &ParseError{Msg: fmt.Sprintf("operator '%s' does not have a right operand", operator)}
+					}
+				}
+
 				return matches[1] + t.Separator + operator + t.Separator + matches[2]
 			}
 
 			return operator
 		})
+
+		if err != nil {
+			return "", err
+		}
 	}
 
 	for _, binaryFunctionParser := range t.BinaryFunctionParsers {
@@ -225,8 +235,6 @@ func (t *SyntaxTree) ParseQuery(query string) (string, error) {
 	query = strings.ReplaceAll(query, "(", "("+t.Separator)
 	query = strings.ReplaceAll(query, ")", t.Separator+")")
 
-	fmt.Printf("parsedQuery: %s\n", query)
-
 	// check for possible typos, resulting in parse failure
 	parsedQuerySplit := strings.Split(query, t.Separator)
 	delimiterCount = 0
@@ -234,30 +242,14 @@ func (t *SyntaxTree) ParseQuery(query string) (string, error) {
 	lastClosingIndex := 0
 	for index, queryPart := range parsedQuerySplit {
 		if _, ok := operatorMap[queryPart]; ok {
-			if index - 1 < 0 {
+			if index-1 < 0 || parsedQuerySplit[index-1] == "" {
 				return "", &ParseError{Msg: fmt.Sprintf("operator '%s' does not have a left operand", queryPart)}
 			}
-			if index + 1 > len(parsedQuerySplit) {
+			if index+1 > len(parsedQuerySplit) || parsedQuerySplit[index+1] == "" {
 				return "", &ParseError{Msg: fmt.Sprintf("operator '%s' does not have a right operand", queryPart)}
 			}
-
-			leftOp := parsedQuerySplit[index - 1]
-			rightOp := parsedQuerySplit[index + 1]
-			checkLeftOpRegex := regexp.MustCompile(fmt.Sprintf(`(\)|\s+|%s|%s)`, regexp.QuoteMeta(strings.Join(slices.Collect(maps.Keys(operatorMap)), "|")), regexp.QuoteMeta(strings.Join(slices.Collect(maps.Keys(binaryFunctionMap)), "|"))))
-			// TODO: check if left and right operand are one of the following
-			// - "(" [rightop] or ")" [leftop]
-			// - "no spaces" [leftop]
-			// - "no operator"
-			// - "no binary function [leftop]"
-
-			fmt.Printf("[%s,%d] leftOp: %+v\n", queryPart, index, leftOp)
-			fmt.Printf("[%s,%d] rightOp: %+v\n", queryPart, index, rightOp)
-
-			if checkLeftOpRegex.MatchString(leftOp) {
-				fmt.Printf("[%s] it matches query [%s]: '%s'\n", queryPart, query, leftOp)
-			}
-
 		}
+
 		if queryPart == "(" {
 			delimiterCount++
 			lastOpeningIndex = index
@@ -283,6 +275,7 @@ func (t *SyntaxTree) ParseQuery(query string) (string, error) {
 	return query, nil
 }
 
+//nolint:gocognit,nestif,gocyclo,gocritic // complex function, no way around it
 func createTree(t *SyntaxTree, parsedQuery string, startId int) (*Node, int) {
 	var currentNode *Node
 	var previousNode *Node
