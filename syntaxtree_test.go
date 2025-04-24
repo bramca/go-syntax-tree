@@ -273,6 +273,83 @@ func TestParseQuery_ReturnsError(t *testing.T) {
 			query:            "())",
 			expectedErrorMsg: "failed to parse query: missing opening bracket '('",
 		},
+		"operator missing operand - 1": {
+			syntaxTree: SyntaxTree{
+				OperatorPrecedence:    exampleMath.OperatorPrecedence,
+				OperatorParsers:       exampleMath.OperatorParsers,
+				BinaryFunctionParsers: exampleMath.GetBinaryFunctionOperators('(', ')', ','),
+				UnaryFunctionParsers:  exampleMath.GetUnaryFunctionOperators('(', ')'),
+				Separator:             ";",
+			},
+			query:            "*1-2",
+			expectedErrorMsg: "failed to parse query: operator '*' does not have a left operand",
+		},
+		"operator missing operand - 2": {
+			syntaxTree: SyntaxTree{
+				OperatorPrecedence:    exampleMath.OperatorPrecedence,
+				OperatorParsers:       exampleMath.OperatorParsers,
+				BinaryFunctionParsers: exampleMath.GetBinaryFunctionOperators('(', ')', ','),
+				UnaryFunctionParsers:  exampleMath.GetUnaryFunctionOperators('(', ')'),
+				Separator:             ";",
+			},
+			query:            "2-",
+			expectedErrorMsg: "failed to parse query: operator '-' does not have a right operand",
+		},
+		"operator missing operand - 3": {
+			syntaxTree: SyntaxTree{
+				OperatorPrecedence:    exampleOdata.OperatorPrecedence,
+				OperatorParsers:       exampleOdata.OperatorParsers,
+				BinaryFunctionParsers: exampleOdata.GetBinaryFunctionOperators('(', ')', ','),
+				UnaryFunctionParsers:  exampleOdata.GetUnaryFunctionOperators('(', ')'),
+				Separator:             ";",
+			},
+			query:            "name eq",
+			expectedErrorMsg: "failed to parse query: possible typo in \"name eq\"",
+		},
+		"operator missing operand - 4": {
+			syntaxTree: SyntaxTree{
+				OperatorPrecedence:    exampleOdata.OperatorPrecedence,
+				OperatorParsers:       exampleOdata.OperatorParsers,
+				BinaryFunctionParsers: exampleOdata.GetBinaryFunctionOperators('(', ')', ','),
+				UnaryFunctionParsers:  exampleOdata.GetUnaryFunctionOperators('(', ')'),
+				Separator:             ";",
+			},
+			query:            "eq 'value'",
+			expectedErrorMsg: "failed to parse query: possible typo in \"eq 'value'\"",
+		},
+		"binary function missing operand - 1": {
+			syntaxTree: SyntaxTree{
+				OperatorPrecedence:    exampleOdata.OperatorPrecedence,
+				OperatorParsers:       exampleOdata.OperatorParsers,
+				BinaryFunctionParsers: exampleOdata.GetBinaryFunctionOperators('(', ')', ','),
+				UnaryFunctionParsers:  exampleOdata.GetUnaryFunctionOperators('(', ')'),
+				Separator:             ";",
+			},
+			query:            "contains(name) or name eq 'value'",
+			expectedErrorMsg: "failed to parse query: function 'contains' is missing an operand",
+		},
+		"binary function missing operand - 2": {
+			syntaxTree: SyntaxTree{
+				OperatorPrecedence:    exampleOdata.OperatorPrecedence,
+				OperatorParsers:       exampleOdata.OperatorParsers,
+				BinaryFunctionParsers: exampleOdata.GetBinaryFunctionOperators('(', ')', ','),
+				UnaryFunctionParsers:  exampleOdata.GetUnaryFunctionOperators('(', ')'),
+				Separator:             ";",
+			},
+			query:            "contains(name,'value') or concat(name) eq 'test'",
+			expectedErrorMsg: "failed to parse query: function 'concat' is missing an operand",
+		},
+		"unary function missing operand - 1": {
+			syntaxTree: SyntaxTree{
+				OperatorPrecedence:    exampleOdata.OperatorPrecedence,
+				OperatorParsers:       exampleOdata.OperatorParsers,
+				BinaryFunctionParsers: exampleOdata.GetBinaryFunctionOperators('(', ')', ','),
+				UnaryFunctionParsers:  exampleOdata.GetUnaryFunctionOperators('(', ')'),
+				Separator:             ";",
+			},
+			query:            "length() ge 5",
+			expectedErrorMsg: "failed to parse query: function 'length' is missing an operand",
+		},
 	}
 
 	for name, testData := range tests {
@@ -289,7 +366,9 @@ func TestParseQuery_ReturnsError(t *testing.T) {
 			// Assert
 			Equal(t, parsedQuery, "")
 			Error(t, err)
-			Equal(t, err.Error(), testData.expectedErrorMsg)
+			if err != nil {
+				Equal(t, err.Error(), testData.expectedErrorMsg)
+			}
 		})
 	}
 }

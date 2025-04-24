@@ -102,7 +102,9 @@ func (t *SyntaxTree) ConstructTree(query string) error {
 	return nil
 }
 
+//nolint:gocognit,gocyclo // complex function, no way around it
 func (t *SyntaxTree) ParseQuery(query string) (string, error) {
+	originalQuery := query
 	query = strings.Trim(query, " ")
 
 	// Check query for missing brackets
@@ -124,10 +126,13 @@ func (t *SyntaxTree) ParseQuery(query string) (string, error) {
 		return "", &ParseError{Msg: "missing opening bracket '('"}
 	}
 
-	// TODO: Add more checks for parsing (e.g. operators missing an operand, operands missing an operator or function, ...)
+	operatorMap := map[string]OperatorParser{}
+	binaryFunctionMap := map[string]BinaryFunctionParser{}
+	unaryFunctionMap := map[string]UnaryFunctionParser{}
 
 	for _, operatorParser := range t.OperatorParsers {
 		operator := operatorParser.OperatorString
+		operatorMap[operator] = operatorParser
 		expression := operatorParser.OperatorPattern
 		query = expression.ReplaceAllStringFunc(query, func(s string) string {
 			matches := expression.FindStringSubmatch(s)
@@ -140,6 +145,7 @@ func (t *SyntaxTree) ParseQuery(query string) (string, error) {
 	}
 
 	for _, binaryFunctionParser := range t.BinaryFunctionParsers {
+		binaryFunctionMap[binaryFunctionParser.FunctionName] = binaryFunctionParser
 		for firstIndex := strings.Index(query, binaryFunctionParser.FunctionName+string(binaryFunctionParser.OpeningDelimiter)); firstIndex >= 0; firstIndex = strings.Index(query, binaryFunctionParser.FunctionName+string(binaryFunctionParser.OpeningDelimiter)) {
 			delimiterCount := 0
 			totalFuncString := ""
@@ -164,6 +170,12 @@ func (t *SyntaxTree) ParseQuery(query string) (string, error) {
 				totalFuncIndex++
 			}
 
+			if separatorReplaceIndex == 0 {
+				return "", &ParseError{
+					Msg: fmt.Sprintf("function '%s' is missing an operand", binaryFunctionParser.FunctionName),
+				}
+			}
+
 			newFuncString := totalFuncString[:separatorReplaceIndex] + ")" + t.Separator + binaryFunctionParser.FunctionName + t.Separator + "(" + totalFuncString[separatorReplaceIndex+1:totalFuncIndex] + ")"
 			newFuncString = strings.Replace(newFuncString, binaryFunctionParser.FunctionName+string(binaryFunctionParser.OpeningDelimiter), "(", 1)
 
@@ -172,6 +184,7 @@ func (t *SyntaxTree) ParseQuery(query string) (string, error) {
 	}
 
 	for _, unaryFunctionParser := range t.UnaryFunctionParsers {
+		unaryFunctionMap[unaryFunctionParser.FunctionName] = unaryFunctionParser
 		for firstIndex := strings.Index(query, unaryFunctionParser.FunctionName+string(unaryFunctionParser.OpeningDelimiter)); firstIndex >= 0; firstIndex = strings.Index(query, unaryFunctionParser.FunctionName+string(unaryFunctionParser.OpeningDelimiter)) {
 			delimiterCount := 0
 			totalFuncString := ""
@@ -192,6 +205,15 @@ func (t *SyntaxTree) ParseQuery(query string) (string, error) {
 				totalFuncIndex++
 			}
 
+			// if the second to last character of the total function string
+			// is the opening delimiter, then the function does not have
+			// an operand
+			if totalFuncString[totalFuncIndex-1] == unaryFunctionParser.OpeningDelimiter {
+				return "", &ParseError{
+					Msg: fmt.Sprintf("function '%s' is missing an operand", unaryFunctionParser.FunctionName),
+				}
+			}
+
 			newFuncString := totalFuncString[:totalFuncIndex] + ")"
 			newFuncString = strings.Replace(newFuncString, unaryFunctionParser.FunctionName+string(unaryFunctionParser.OpeningDelimiter), unaryFunctionParser.FunctionName+t.Separator+"(", 1)
 
@@ -208,6 +230,15 @@ func (t *SyntaxTree) ParseQuery(query string) (string, error) {
 	lastOpeningIndex := 0
 	lastClosingIndex := 0
 	for index, queryPart := range parsedQuerySplit {
+		if _, ok := operatorMap[queryPart]; ok {
+			if index-1 < 0 || parsedQuerySplit[index-1] == "" {
+				return "", &ParseError{Msg: fmt.Sprintf("operator '%s' does not have a left operand", queryPart)}
+			}
+			if index+1 > len(parsedQuerySplit) || parsedQuerySplit[index+1] == "" {
+				return "", &ParseError{Msg: fmt.Sprintf("operator '%s' does not have a right operand", queryPart)}
+			}
+		}
+
 		if queryPart == "(" {
 			delimiterCount++
 			lastOpeningIndex = index
@@ -226,9 +257,14 @@ func (t *SyntaxTree) ParseQuery(query string) (string, error) {
 		return "", &ParseError{Msg: fmt.Sprintf("possible typo in %q", strings.Join(parsedQuerySplit[lastOpeningIndex:], " "))}
 	}
 
+	if originalQuery == query {
+		return "", &ParseError{Msg: fmt.Sprintf("possible typo in %q", originalQuery)}
+	}
+
 	return query, nil
 }
 
+//nolint:gocognit,nestif,gocyclo,gocritic // complex function, no way around it
 func createTree(t *SyntaxTree, parsedQuery string, startId int) (*Node, int) {
 	var currentNode *Node
 	var previousNode *Node

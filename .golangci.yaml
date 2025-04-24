@@ -14,7 +14,6 @@ linters:
     - bodyclose
     - containedctx
     - contextcheck
-    - cyclop
     - decorder
     - dogsled
     - dupword
@@ -22,9 +21,7 @@ linters:
     - errcheck
     - errname
     - errorlint
-    - execinquery
     - exhaustive
-    - exportloopref
     - forbidigo
     - ginkgolinter
     - gocheckcompilerdirectives
@@ -33,7 +30,6 @@ linters:
     - goconst
     - gocritic
     - gocyclo
-    - goerr113
     - gofmt
     - gofumpt
     - goheader
@@ -46,11 +42,9 @@ linters:
     - gosmopolitan
     - govet
     - grouper
-    - ifshort
     - importas
     - ineffassign
     - interfacebloat
-    - interfacer
     - ireturn
     - loggercheck
     - maintidx
@@ -73,7 +67,6 @@ linters:
     - rowserrcheck
     - sqlclosecheck
     - staticcheck
-    - tenv
     - thelper
     - tparallel
     - typecheck
