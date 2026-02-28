@@ -232,7 +232,6 @@ func TestNodeTypeString_ReturnsCorrectValue(t *testing.T) {
 	}
 
 	for name, testData := range tests {
-		testData := testData
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			// Act
@@ -353,7 +352,6 @@ func TestParseQuery_ReturnsError(t *testing.T) {
 	}
 
 	for name, testData := range tests {
-		testData := testData
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			// Arrange
@@ -482,7 +480,6 @@ func TestParseQuery_ReturnsCorrectQuery(t *testing.T) {
 	}
 
 	for name, testData := range tests {
-		testData := testData
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			// Arrange
@@ -553,7 +550,6 @@ func TestConstructTree_ReturnsError(t *testing.T) {
 	}
 
 	for name, testData := range tests {
-		testData := testData
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			// Arrange
@@ -639,7 +635,6 @@ func TestConstructTree_ReturnsNoError(t *testing.T) {
 	}
 
 	for name, testData := range tests {
-		testData := testData
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			// Arrange
@@ -822,7 +817,6 @@ func TestConstructTree_CreatesCorrectGraph(t *testing.T) {
 	}
 
 	for name, testData := range tests {
-		testData := testData
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 			// Arrange
