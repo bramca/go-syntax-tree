@@ -304,6 +304,9 @@ func createTree(t *SyntaxTree, parsedQuery string, startId int) (*Node, int) {
 				if previousNode.LeftChild == nil {
 					previousNode.LeftChild = currentNode
 				} else {
+					if currentNode.Type != Operator && currentNode.Type != UnaryOperator {
+						currentNode.Type = RightOperand
+					}
 					previousNode.RightChild = currentNode
 				}
 			}
@@ -343,6 +346,9 @@ func createTree(t *SyntaxTree, parsedQuery string, startId int) (*Node, int) {
 				if previousNode.LeftChild == nil {
 					previousNode.LeftChild = currentNode
 				} else {
+					if currentNode.Type != Operator && currentNode.Type != UnaryOperator {
+						currentNode.Type = RightOperand
+					}
 					previousNode.RightChild = currentNode
 				}
 
@@ -448,7 +454,7 @@ func (t SyntaxTree) String() string {
 		}
 		nodesVisited[currentNode.Id] = true
 		if currentNode.Parent != nil {
-			graphData += fmt.Sprintf("\t\"%d [%s]\" -- \"%d [%s]\"\n", currentNode.Parent.Id, currentNode.Parent.Value, currentNode.Id, currentNode.Value)
+			graphData = fmt.Sprintf("%s\t\"%d [%s]\" -- \"%d [%s]\"\n", graphData, currentNode.Parent.Id, currentNode.Parent.Value, currentNode.Id, currentNode.Value)
 			currentNode = currentNode.Parent
 		}
 	}
