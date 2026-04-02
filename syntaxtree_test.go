@@ -394,7 +394,7 @@ func TestParseQuery_ReturnsCorrectQuery(t *testing.T) {
 				OperatorPrecedence:    exampleMath.OperatorPrecedence,
 				OperatorParsers:       exampleMath.OperatorParsers,
 				BinaryFunctionParsers: exampleMath.GetBinaryFunctionOperators('(', ')', ','),
-				UnaryFunctionParsers:  exampleOdata.GetUnaryFunctionOperators('(', ')'),
+				UnaryFunctionParsers:  exampleMath.GetUnaryFunctionOperators('(', ')'),
 				Separator:             ";",
 			},
 			query:               "(1+2)*3",

@@ -148,7 +148,7 @@ func (t *SyntaxTree) ParseQuery(query string) (string, error) {
 		binaryFunctionMap[binaryFunctionParser.FunctionName] = binaryFunctionParser
 		for firstIndex := strings.Index(query, binaryFunctionParser.FunctionName+string(binaryFunctionParser.OpeningDelimiter)); firstIndex >= 0; firstIndex = strings.Index(query, binaryFunctionParser.FunctionName+string(binaryFunctionParser.OpeningDelimiter)) {
 			delimiterCount := 0
-			totalFuncString := ""
+			var totalFuncString strings.Builder
 			totalFuncIndex := 0
 			separatorReplaceIndex := 0
 			for i := firstIndex; i < len(query); i++ {
@@ -158,7 +158,7 @@ func (t *SyntaxTree) ParseQuery(query string) (string, error) {
 				if query[i] == binaryFunctionParser.ClosingDelimiter {
 					delimiterCount--
 					if delimiterCount == 0 {
-						totalFuncString += string(query[i])
+						totalFuncString.WriteByte(query[i])
 
 						break
 					}
@@ -166,7 +166,7 @@ func (t *SyntaxTree) ParseQuery(query string) (string, error) {
 				if delimiterCount == 1 && query[i] == binaryFunctionParser.OperandSeparator {
 					separatorReplaceIndex = totalFuncIndex
 				}
-				totalFuncString += string(query[i])
+				totalFuncString.WriteByte(query[i])
 				totalFuncIndex++
 			}
 
@@ -176,10 +176,19 @@ func (t *SyntaxTree) ParseQuery(query string) (string, error) {
 				}
 			}
 
-			newFuncString := totalFuncString[:separatorReplaceIndex] + ")" + t.Separator + binaryFunctionParser.FunctionName + t.Separator + "(" + totalFuncString[separatorReplaceIndex+1:totalFuncIndex] + ")"
+			var buildNewFuncString strings.Builder
+			buildNewFuncString.WriteString(totalFuncString.String()[:separatorReplaceIndex])
+			buildNewFuncString.WriteByte(')')
+			buildNewFuncString.WriteString(t.Separator)
+			buildNewFuncString.WriteString(binaryFunctionParser.FunctionName)
+			buildNewFuncString.WriteString(t.Separator)
+			buildNewFuncString.WriteByte('(')
+			buildNewFuncString.WriteString(totalFuncString.String()[separatorReplaceIndex+1 : totalFuncIndex])
+			buildNewFuncString.WriteByte(')')
+			newFuncString := buildNewFuncString.String()
 			newFuncString = strings.Replace(newFuncString, binaryFunctionParser.FunctionName+string(binaryFunctionParser.OpeningDelimiter), "(", 1)
 
-			query = strings.Replace(query, totalFuncString, newFuncString, 1)
+			query = strings.Replace(query, totalFuncString.String(), newFuncString, 1)
 		}
 	}
 
@@ -187,7 +196,7 @@ func (t *SyntaxTree) ParseQuery(query string) (string, error) {
 		unaryFunctionMap[unaryFunctionParser.FunctionName] = unaryFunctionParser
 		for firstIndex := strings.Index(query, unaryFunctionParser.FunctionName+string(unaryFunctionParser.OpeningDelimiter)); firstIndex >= 0; firstIndex = strings.Index(query, unaryFunctionParser.FunctionName+string(unaryFunctionParser.OpeningDelimiter)) {
 			delimiterCount := 0
-			totalFuncString := ""
+			var totalFuncString strings.Builder
 			totalFuncIndex := 0
 			for i := firstIndex; i < len(query); i++ {
 				if query[i] == unaryFunctionParser.OpeningDelimiter {
@@ -196,28 +205,28 @@ func (t *SyntaxTree) ParseQuery(query string) (string, error) {
 				if query[i] == unaryFunctionParser.ClosingDelimiter {
 					delimiterCount--
 					if delimiterCount == 0 {
-						totalFuncString += string(query[i])
+						totalFuncString.WriteByte(query[i])
 
 						break
 					}
 				}
-				totalFuncString += string(query[i])
+				totalFuncString.WriteByte(query[i])
 				totalFuncIndex++
 			}
 
 			// if the second to last character of the total function string
 			// is the opening delimiter, then the function does not have
 			// an operand
-			if totalFuncString[totalFuncIndex-1] == unaryFunctionParser.OpeningDelimiter {
+			if totalFuncString.String()[totalFuncIndex-1] == unaryFunctionParser.OpeningDelimiter {
 				return "", &ParseError{
 					Msg: fmt.Sprintf("function '%s' is missing an operand", unaryFunctionParser.FunctionName),
 				}
 			}
 
-			newFuncString := totalFuncString[:totalFuncIndex] + ")"
+			newFuncString := totalFuncString.String()[:totalFuncIndex] + ")"
 			newFuncString = strings.Replace(newFuncString, unaryFunctionParser.FunctionName+string(unaryFunctionParser.OpeningDelimiter), unaryFunctionParser.FunctionName+t.Separator+"(", 1)
 
-			query = strings.Replace(query, totalFuncString, newFuncString, 1)
+			query = strings.Replace(query, totalFuncString.String(), newFuncString, 1)
 		}
 	}
 
