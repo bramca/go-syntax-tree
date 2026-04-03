@@ -1,6 +1,9 @@
 # 🌲 go-syntax-tree
 
+![GitHub](https://img.shields.io/github/license/bramca/go-syntax-tree)
+![Go version](https://img.shields.io/github/go-mod/go-version/bramca/go-syntax-tree)
 [![Go package](https://github.com/bramca/go-syntax-tree/actions/workflows/test.yaml/badge.svg)](https://github.com/bramca/go-syntax-tree/actions/workflows/test.yaml)
+[![release](https://img.shields.io/github/v/release/bramca/go-syntax-tree.svg)](https://github.com/bramca/go-syntax-tree/releases)
 
 This package provides a way to construct a simple [Syntax Tree](https://en.wikipedia.org/wiki/Abstract_syntax_tree) for a certain `query` based on predefined `Operators` and `Functions` with there mutual priority. It will also parse and take into account grouping using `()` in the operator precedence.
 
