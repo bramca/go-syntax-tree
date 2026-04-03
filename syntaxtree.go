@@ -146,12 +146,13 @@ func (t *SyntaxTree) ParseQuery(query string) (string, error) {
 
 	for _, binaryFunctionParser := range t.BinaryFunctionParsers {
 		binaryFunctionMap[binaryFunctionParser.FunctionName] = binaryFunctionParser
-		for firstIndex := strings.Index(query, binaryFunctionParser.FunctionName+string(binaryFunctionParser.OpeningDelimiter)); firstIndex >= 0; firstIndex = strings.Index(query, binaryFunctionParser.FunctionName+string(binaryFunctionParser.OpeningDelimiter)) {
+		previousIndex := -1
+		for nextIndex := strings.Index(query, binaryFunctionParser.FunctionName+string(binaryFunctionParser.OpeningDelimiter)); nextIndex >= 0 && nextIndex != previousIndex; nextIndex = strings.Index(query, binaryFunctionParser.FunctionName+string(binaryFunctionParser.OpeningDelimiter)) {
 			delimiterCount := 0
 			var totalFuncString strings.Builder
 			totalFuncIndex := 0
 			separatorReplaceIndex := 0
-			for i := firstIndex; i < len(query); i++ {
+			for i := nextIndex; i < len(query); i++ {
 				if query[i] == binaryFunctionParser.OpeningDelimiter {
 					delimiterCount++
 				}
@@ -189,16 +190,18 @@ func (t *SyntaxTree) ParseQuery(query string) (string, error) {
 			newFuncString = strings.Replace(newFuncString, binaryFunctionParser.FunctionName+string(binaryFunctionParser.OpeningDelimiter), "(", 1)
 
 			query = strings.Replace(query, totalFuncString.String(), newFuncString, 1)
+			previousIndex = nextIndex
 		}
 	}
 
 	for _, unaryFunctionParser := range t.UnaryFunctionParsers {
 		unaryFunctionMap[unaryFunctionParser.FunctionName] = unaryFunctionParser
-		for firstIndex := strings.Index(query, unaryFunctionParser.FunctionName+string(unaryFunctionParser.OpeningDelimiter)); firstIndex >= 0; firstIndex = strings.Index(query, unaryFunctionParser.FunctionName+string(unaryFunctionParser.OpeningDelimiter)) {
+		previousIndex := -1
+		for nextIndex := strings.Index(query, unaryFunctionParser.FunctionName+string(unaryFunctionParser.OpeningDelimiter)); nextIndex >= 0 && nextIndex != previousIndex; nextIndex = strings.Index(query, unaryFunctionParser.FunctionName+string(unaryFunctionParser.OpeningDelimiter)) {
 			delimiterCount := 0
 			var totalFuncString strings.Builder
 			totalFuncIndex := 0
-			for i := firstIndex; i < len(query); i++ {
+			for i := nextIndex; i < len(query); i++ {
 				if query[i] == unaryFunctionParser.OpeningDelimiter {
 					delimiterCount++
 				}
@@ -227,6 +230,7 @@ func (t *SyntaxTree) ParseQuery(query string) (string, error) {
 			newFuncString = strings.Replace(newFuncString, unaryFunctionParser.FunctionName+string(unaryFunctionParser.OpeningDelimiter), unaryFunctionParser.FunctionName+t.Separator+"(", 1)
 
 			query = strings.Replace(query, totalFuncString.String(), newFuncString, 1)
+			previousIndex = nextIndex
 		}
 	}
 
