@@ -394,7 +394,7 @@ func TestParseQuery_ReturnsCorrectQuery(t *testing.T) {
 				OperatorPrecedence:    exampleMath.OperatorPrecedence,
 				OperatorParsers:       exampleMath.OperatorParsers,
 				BinaryFunctionParsers: exampleMath.GetBinaryFunctionOperators('(', ')', ','),
-				UnaryFunctionParsers:  exampleOdata.GetUnaryFunctionOperators('(', ')'),
+				UnaryFunctionParsers:  exampleMath.GetUnaryFunctionOperators('(', ')'),
 				Separator:             ";",
 			},
 			query:               "(1+2)*3",
@@ -454,6 +454,17 @@ func TestParseQuery_ReturnsCorrectQuery(t *testing.T) {
 			},
 			query:               "toupper(tolower(name)) eq 'JOHN'",
 			expectedParsedQuery: "toupper;(;tolower;(;name;););eq;'JOHN'",
+		},
+		"odata simple example multibyte string": {
+			syntaxTree: SyntaxTree{
+				OperatorPrecedence:    exampleOdata.OperatorPrecedence,
+				OperatorParsers:       exampleOdata.OperatorParsers,
+				BinaryFunctionParsers: exampleOdata.GetBinaryFunctionOperators('(', ')', ','),
+				UnaryFunctionParsers:  exampleOdata.GetUnaryFunctionOperators('(', ')'),
+				Separator:             ";",
+			},
+			query:               "contains(tolower(name),'café')",
+			expectedParsedQuery: "(;tolower;(;name;););contains;(;'café';)",
 		},
 		"odata complex example": {
 			syntaxTree: SyntaxTree{
@@ -777,6 +788,21 @@ func TestConstructTree_CreatesCorrectGraph(t *testing.T) {
 	"0 [toupper]" -- "1 [tolower]"
 	"3 [eq]" -- "0 [toupper]"
 	"3 [eq]" -- "4 ['JOHN']"
+}`,
+		},
+		"odata simple example multibyte string": {
+			syntaxTree: SyntaxTree{
+				OperatorPrecedence:    exampleOdata.OperatorPrecedence,
+				OperatorParsers:       exampleOdata.OperatorParsers,
+				BinaryFunctionParsers: exampleOdata.GetBinaryFunctionOperators('(', ')', ','),
+				UnaryFunctionParsers:  exampleOdata.GetUnaryFunctionOperators('(', ')'),
+				Separator:             ";",
+			},
+			query: "contains(tolower(name),'café')",
+			expectedGraph: `graph {
+	"0 [tolower]" -- "1 [name]"
+	"2 [contains]" -- "0 [tolower]"
+	"2 [contains]" -- "3 ['café']"
 }`,
 		},
 		"odata complex example": {
