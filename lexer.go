@@ -9,18 +9,22 @@ type TokenType int
 
 const (
 	At TokenType = iota
+	Str
 	Op
 	BinFunc
 	UnFunc
 	OpenDelim
 	CloseDelim
 	Sep
+	EOF
 )
 
 func (t TokenType) String() string {
 	switch t {
 	case At:
 		return "At"
+	case Str:
+		return "Str"
 	case Op:
 		return "Op"
 	case BinFunc:
@@ -47,7 +51,7 @@ type Lexer struct {
 	Tokens []Token
 }
 
-func NewLexer(operators []string, binaryFunctions []string, unaryFunctions []string, openeningDelimiter byte, closingDelimiter byte, binaryFuncOperandSeperator byte, input string) Lexer {
+func NewLexer(operators []string, binaryFunctions []string, unaryFunctions []string, openingDelimiter byte, closingDelimiter byte, strDelimiter byte, binaryFuncOperandSeperator byte, input string) *Lexer {
 	operatorIndices := map[int]string{}
 	for _, op := range operators {
 		inputCopy := input
@@ -89,6 +93,7 @@ func NewLexer(operators []string, binaryFunctions []string, unaryFunctions []str
 
 	i := 0
 	var operand strings.Builder
+	operandType := At
 	for i < len(input)-1 {
 		foundType := false
 		var token Token
@@ -113,20 +118,34 @@ func NewLexer(operators []string, binaryFunctions []string, unaryFunctions []str
 			}
 			i += len(op)
 			foundType = true
-		} else if input[i] == openeningDelimiter {
+		} else if input[i] == openingDelimiter && operandType != Str {
 			token = Token{
 				Value: string(input[i]),
 				Type:  OpenDelim,
 			}
 			i++
 			foundType = true
-		} else if input[i] == closingDelimiter {
+		} else if input[i] == closingDelimiter && operandType != Str {
 			token = Token{
 				Value: string(input[i]),
 				Type:  CloseDelim,
 			}
 			i++
 			foundType = true
+		} else if input[i] == strDelimiter {
+			if operandType == At {
+				operandType = Str
+			} else {
+				operand.WriteByte(input[i])
+				token = Token{
+					Value: operand.String(),
+					Type:  Str,
+				}
+				foundType = true
+				operandType = At
+				operand.Reset()
+				i++
+			}
 		} else if input[i] == binaryFuncOperandSeperator {
 			token = Token{
 				Value: string(input[i]),
@@ -134,12 +153,15 @@ func NewLexer(operators []string, binaryFunctions []string, unaryFunctions []str
 			}
 			i++
 			foundType = true
+		} else if input[i] == ' ' && operandType != Str {
+			i++
+			continue
 		}
 
 		if foundType && operand.Len() > 0 {
 			tokens = append(tokens, Token{
 				Value: operand.String(),
-				Type:  At,
+				Type:  operandType,
 			})
 			tokens = append(tokens, token)
 			operand.Reset()
@@ -151,5 +173,28 @@ func NewLexer(operators []string, binaryFunctions []string, unaryFunctions []str
 		}
 	}
 
-	return Lexer{Tokens: tokens}
+	return &Lexer{Tokens: tokens}
+}
+
+func (l *Lexer) Next() Token {
+	token := Token{
+		Type: EOF,
+	}
+	if len(l.Tokens) > 0 {
+		token = l.Tokens[len(l.Tokens)-1]
+		l.Tokens = l.Tokens[:len(l.Tokens)-1]
+	}
+
+	return token
+}
+
+func (l *Lexer) Peek() Token {
+	token := Token{
+		Type: EOF,
+	}
+	if len(l.Tokens) > 0 {
+		token = l.Tokens[len(l.Tokens)-1]
+	}
+
+	return token
 }
