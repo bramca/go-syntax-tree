@@ -94,7 +94,7 @@ func NewLexer(operators []string, binaryFunctions []string, unaryFunctions []str
 	i := 0
 	var operand strings.Builder
 	operandType := At
-	for i < len(input)-1 {
+	for i < len(input) {
 		foundType := false
 		var token Token
 		if op, ok := operatorIndices[i]; ok {
