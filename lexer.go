@@ -8,35 +8,35 @@ import (
 type TokenType int
 
 const (
-	At TokenType = iota
-	Str
-	Op
-	BinFunc
-	UnFunc
-	OpenDelim
-	CloseDelim
-	Sep
+	Atomic TokenType = iota
+	String
+	Operand
+	BinaryFunc
+	UnaryFunc
+	OpenDelimiter
+	CloseDelimiter
+	Separator
 	EOF
 )
 
 func (t TokenType) String() string {
 	switch t {
-	case At:
-		return "At"
-	case Str:
-		return "Str"
-	case Op:
-		return "Op"
-	case BinFunc:
-		return "BinFunc"
-	case UnFunc:
-		return "UnFunc"
-	case OpenDelim:
-		return "OpenDelim"
-	case CloseDelim:
-		return "CloseDelim"
-	case Sep:
-		return "Sep"
+	case Atomic:
+		return "Atomic"
+	case String:
+		return "String"
+	case Operand:
+		return "Operand"
+	case BinaryFunc:
+		return "BinaryFunc"
+	case UnaryFunc:
+		return "UnaryFunc"
+	case OpenDelimiter:
+		return "OpenDelimiter"
+	case CloseDelimiter:
+		return "CloseDelimiter"
+	case Separator:
+		return "Separator"
 	}
 
 	return "Unknown"
@@ -93,67 +93,67 @@ func NewLexer(operators []string, binaryFunctions []string, unaryFunctions []str
 
 	i := 0
 	var operand strings.Builder
-	operandType := At
+	operandType := Atomic
 	for i < len(input) {
 		foundType := false
 		var token Token
 		if op, ok := operatorIndices[i]; ok {
 			token = Token{
 				Value: op,
-				Type:  Op,
+				Type:  Operand,
 			}
 			i += len(op)
 			foundType = true
 		} else if op, ok := binaryFuncIndices[i]; ok {
 			token = Token{
 				Value: op,
-				Type:  BinFunc,
+				Type:  BinaryFunc,
 			}
 			i += len(op)
 			foundType = true
 		} else if op, ok := unaryFuncIndices[i]; ok {
 			token = Token{
 				Value: op,
-				Type:  UnFunc,
+				Type:  UnaryFunc,
 			}
 			i += len(op)
 			foundType = true
-		} else if input[i] == openingDelimiter && operandType != Str {
+		} else if input[i] == openingDelimiter && operandType != String {
 			token = Token{
 				Value: string(input[i]),
-				Type:  OpenDelim,
+				Type:  OpenDelimiter,
 			}
 			i++
 			foundType = true
-		} else if input[i] == closingDelimiter && operandType != Str {
+		} else if input[i] == closingDelimiter && operandType != String {
 			token = Token{
 				Value: string(input[i]),
-				Type:  CloseDelim,
+				Type:  CloseDelimiter,
 			}
 			i++
 			foundType = true
 		} else if input[i] == strDelimiter {
-			if operandType == At {
-				operandType = Str
+			if operandType == Atomic {
+				operandType = String
 			} else {
 				operand.WriteByte(input[i])
 				token = Token{
 					Value: operand.String(),
-					Type:  Str,
+					Type:  String,
 				}
 				foundType = true
-				operandType = At
+				operandType = Atomic
 				operand.Reset()
 				i++
 			}
 		} else if input[i] == binaryFuncOperandSeperator {
 			token = Token{
 				Value: string(input[i]),
-				Type:  Sep,
+				Type:  Separator,
 			}
 			i++
 			foundType = true
-		} else if input[i] == ' ' && operandType != Str {
+		} else if input[i] == ' ' && operandType != String {
 			i++
 			continue
 		}
