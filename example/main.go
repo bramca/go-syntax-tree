@@ -7,10 +7,14 @@ import (
 )
 
 func main() {
-	operators := []string{
+	binaryOperators := []string{
 		"*",
 		"/",
 		"+",
+		"-",
+	}
+
+	unaryOperators := []string{
 		"-",
 	}
 
@@ -24,11 +28,20 @@ func main() {
 
 	query := "1+pow(2+3*4,pow((1+sqrt(3))*4))"
 
-	lexer := syntaxtree.NewLexer(operators, binaryFunctions, unaryFunctions, '(', ')', byte(0), ',', query)
+	mathLexer := &syntaxtree.Lexer{
+		BinaryOperators: binaryOperators,
+		UnaryOperators:  unaryOperators,
+		BinaryFunctions: binaryFunctions,
+		UnaryFunctions:  unaryFunctions,
+		OpenDelimiter:   '(',
+		CloseDelimiter:  ')',
+	}
 
-	fmt.Printf("query: %s\nlexer: %+v\n", query, lexer)
+	tokenStream := mathLexer.Tokenize(query)
 
-	operators = []string{
+	fmt.Printf("query: %s\ntokens: %+v\n", query, tokenStream)
+
+	binaryOperators = []string{
 		"eq",
 		"ne",
 		"and",
@@ -46,25 +59,36 @@ func main() {
 
 	query = "name eq 'test' or contains(tolower(name), 'something (else)')"
 
-	lexer = syntaxtree.NewLexer(operators, binaryFunctions, unaryFunctions, '(', ')', '\'', ',', query)
+	odataLexer := syntaxtree.Lexer{
+		BinaryOperators:           binaryOperators,
+		UnaryOperators:            unaryOperators,
+		BinaryFunctions:           binaryFunctions,
+		UnaryFunctions:            unaryFunctions,
+		OpenDelimiter:             '(',
+		CloseDelimiter:            ')',
+		StringDelimiter:           '\'',
+		BinaryFunctionOpSeparator: ',',
+	}
 
-	fmt.Printf("query: %s\nlexer: %+v\n", query, lexer)
+	tokenStream = odataLexer.Tokenize(query)
+
+	fmt.Printf("query: %s\ntokens: %+v\n", query, tokenStream)
 
 	query = "tolower(name) eq 'test'"
 
-	lexer = syntaxtree.NewLexer(operators, binaryFunctions, unaryFunctions, '(', ')', '\'', ',', query)
+	tokenStream = odataLexer.Tokenize(query)
 
-	fmt.Printf("query: %s\nlexer: %+v\n", query, lexer)
+	fmt.Printf("query: %s\ntokens: %+v\n", query, tokenStream)
 
 	query = "contains(tolower(name), 'some value')"
 
-	lexer = syntaxtree.NewLexer(operators, binaryFunctions, unaryFunctions, '(', ')', '\'', ',', query)
+	tokenStream = odataLexer.Tokenize(query)
 
-	fmt.Printf("query: %s\nlexer: %+v\n", query, lexer)
+	fmt.Printf("query: %s\ntokens: %+v\n", query, tokenStream)
 
 	query = "not(contains(tolower(name), 'some value'))"
 
-	lexer = syntaxtree.NewLexer(operators, binaryFunctions, unaryFunctions, '(', ')', '\'', ',', query)
+	tokenStream = odataLexer.Tokenize(query)
 
-	fmt.Printf("query: %s\nlexer: %+v\n", query, lexer)
+	fmt.Printf("query: %s\ntokens: %+v\n", query, tokenStream)
 }

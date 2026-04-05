@@ -8,9 +8,10 @@ import (
 type TokenType int
 
 const (
-	Atomic TokenType = iota
-	String
-	Operand
+	Operand TokenType = iota
+	StringOperand
+	UnaryOperator
+	BinaryOperator
 	BinaryFunc
 	UnaryFunc
 	OpenDelimiter
@@ -21,12 +22,12 @@ const (
 
 func (t TokenType) String() string {
 	switch t {
-	case Atomic:
-		return "Atomic"
-	case String:
-		return "String"
 	case Operand:
 		return "Operand"
+	case StringOperand:
+		return "StringOperand"
+	case BinaryOperator:
+		return "BinaryOperator"
 	case BinaryFunc:
 		return "BinaryFunc"
 	case UnaryFunc:
@@ -47,16 +48,51 @@ type Token struct {
 	Type  TokenType
 }
 
-type Lexer struct {
+type TokenStream struct {
 	Tokens []Token
 }
 
-func NewLexer(operators []string, binaryFunctions []string, unaryFunctions []string, openingDelimiter byte, closingDelimiter byte, strDelimiter byte, binaryFuncOperandSeperator byte, input string) *Lexer {
+func (t *TokenStream) Next() Token {
+	token := Token{
+		Type: EOF,
+	}
+	if len(t.Tokens) > 0 {
+		token = t.Tokens[len(t.Tokens)-1]
+		t.Tokens = t.Tokens[:len(t.Tokens)-1]
+	}
+
+	return token
+}
+
+func (t *TokenStream) Peek() Token {
+	token := Token{
+		Type: EOF,
+	}
+	if len(t.Tokens) > 0 {
+		token = t.Tokens[len(t.Tokens)-1]
+	}
+
+	return token
+}
+
+type Lexer struct {
+	BinaryOperators []string
+	UnaryOperators  []string
+	BinaryFunctions []string
+	UnaryFunctions  []string
+
+	OpenDelimiter             byte
+	CloseDelimiter            byte
+	StringDelimiter           byte
+	BinaryFunctionOpSeparator byte
+}
+
+func (l *Lexer) Tokenize(expression string) *TokenStream {
 	operatorIndices := map[int]string{}
-	for _, op := range operators {
-		inputCopy := input
+	for _, op := range l.BinaryOperators {
+		inputCopy := expression
 		inputOffset := 0
-		for index := strings.Index(input, op); index >= 0; index = strings.Index(inputCopy, op) {
+		for index := strings.Index(expression, op); index >= 0; index = strings.Index(inputCopy, op) {
 			operatorIndices[index+inputOffset] = op
 			inputOffset += len(inputCopy[:index+len(op)])
 			inputCopy = inputCopy[index+len(op):]
@@ -64,10 +100,10 @@ func NewLexer(operators []string, binaryFunctions []string, unaryFunctions []str
 	}
 
 	binaryFuncIndices := map[int]string{}
-	for _, op := range binaryFunctions {
-		inputCopy := input
+	for _, op := range l.BinaryFunctions {
+		inputCopy := expression
 		inputOffset := 0
-		for index := strings.Index(input, op); index >= 0; index = strings.Index(inputCopy, op) {
+		for index := strings.Index(expression, op); index >= 0; index = strings.Index(inputCopy, op) {
 			binaryFuncIndices[index+inputOffset] = op
 			inputOffset += len(inputCopy[:index+len(op)])
 			inputCopy = inputCopy[index+len(op):]
@@ -75,10 +111,10 @@ func NewLexer(operators []string, binaryFunctions []string, unaryFunctions []str
 	}
 
 	unaryFuncIndices := map[int]string{}
-	for _, op := range unaryFunctions {
-		inputCopy := input
+	for _, op := range l.UnaryFunctions {
+		inputCopy := expression
 		inputOffset := 0
-		for index := strings.Index(input, op); index >= 0; index = strings.Index(inputCopy, op) {
+		for index := strings.Index(expression, op); index >= 0; index = strings.Index(inputCopy, op) {
 			unaryFuncIndices[index+inputOffset] = op
 			inputOffset += len(inputCopy[:index+len(op)])
 			inputCopy = inputCopy[index+len(op):]
@@ -93,14 +129,14 @@ func NewLexer(operators []string, binaryFunctions []string, unaryFunctions []str
 
 	i := 0
 	var operand strings.Builder
-	operandType := Atomic
-	for i < len(input) {
+	operandType := Operand
+	for i < len(expression) {
 		foundType := false
 		var token Token
 		if op, ok := operatorIndices[i]; ok {
 			token = Token{
 				Value: op,
-				Type:  Operand,
+				Type:  BinaryOperator,
 			}
 			i += len(op)
 			foundType = true
@@ -118,42 +154,42 @@ func NewLexer(operators []string, binaryFunctions []string, unaryFunctions []str
 			}
 			i += len(op)
 			foundType = true
-		} else if input[i] == openingDelimiter && operandType != String {
+		} else if expression[i] == l.OpenDelimiter && operandType != StringOperand {
 			token = Token{
-				Value: string(input[i]),
+				Value: string(expression[i]),
 				Type:  OpenDelimiter,
 			}
 			i++
 			foundType = true
-		} else if input[i] == closingDelimiter && operandType != String {
+		} else if expression[i] == l.CloseDelimiter && operandType != StringOperand {
 			token = Token{
-				Value: string(input[i]),
+				Value: string(expression[i]),
 				Type:  CloseDelimiter,
 			}
 			i++
 			foundType = true
-		} else if input[i] == strDelimiter {
-			if operandType == Atomic {
-				operandType = String
+		} else if expression[i] == l.StringDelimiter {
+			if operandType == Operand {
+				operandType = StringOperand
 			} else {
-				operand.WriteByte(input[i])
+				operand.WriteByte(expression[i])
 				token = Token{
 					Value: operand.String(),
-					Type:  String,
+					Type:  StringOperand,
 				}
 				foundType = true
-				operandType = Atomic
+				operandType = Operand
 				operand.Reset()
 				i++
 			}
-		} else if input[i] == binaryFuncOperandSeperator {
+		} else if expression[i] == l.BinaryFunctionOpSeparator {
 			token = Token{
-				Value: string(input[i]),
+				Value: string(expression[i]),
 				Type:  Separator,
 			}
 			i++
 			foundType = true
-		} else if input[i] == ' ' && operandType != String {
+		} else if expression[i] == ' ' && operandType != StringOperand {
 			i++
 			continue
 		}
@@ -168,33 +204,10 @@ func NewLexer(operators []string, binaryFunctions []string, unaryFunctions []str
 		} else if foundType {
 			tokens = append(tokens, token)
 		} else {
-			operand.WriteByte(input[i])
+			operand.WriteByte(expression[i])
 			i++
 		}
 	}
 
-	return &Lexer{Tokens: tokens}
-}
-
-func (l *Lexer) Next() Token {
-	token := Token{
-		Type: EOF,
-	}
-	if len(l.Tokens) > 0 {
-		token = l.Tokens[len(l.Tokens)-1]
-		l.Tokens = l.Tokens[:len(l.Tokens)-1]
-	}
-
-	return token
-}
-
-func (l *Lexer) Peek() Token {
-	token := Token{
-		Type: EOF,
-	}
-	if len(l.Tokens) > 0 {
-		token = l.Tokens[len(l.Tokens)-1]
-	}
-
-	return token
+	return &TokenStream{Tokens: tokens}
 }

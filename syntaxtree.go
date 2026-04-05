@@ -12,7 +12,7 @@ type NodeType int
 const (
 	Unknown NodeType = iota // 0 by default
 	Operator
-	UnaryOperator
+	UnaryFunction
 	LeftOperand
 	RightOperand
 )
@@ -21,8 +21,8 @@ func (e NodeType) String() string {
 	switch e {
 	case Operator:
 		return "Operator"
-	case UnaryOperator:
-		return "UnaryOperator"
+	case UnaryFunction:
+		return "UnaryFunction"
 	case LeftOperand:
 		return "LeftOperand"
 	case RightOperand:
@@ -317,7 +317,7 @@ func createTree(t *SyntaxTree, parsedQuery string, startId int) (*Node, int) {
 				if previousNode.LeftChild == nil {
 					previousNode.LeftChild = currentNode
 				} else {
-					if currentNode.Type != Operator && currentNode.Type != UnaryOperator {
+					if currentNode.Type != Operator && currentNode.Type != UnaryFunction {
 						currentNode.Type = RightOperand
 					}
 					previousNode.RightChild = currentNode
@@ -333,10 +333,10 @@ func createTree(t *SyntaxTree, parsedQuery string, startId int) (*Node, int) {
 			operatorType := Operator
 			for _, unaryFunction := range t.UnaryFunctionParsers {
 				if parsedQueryPart == unaryFunction.FunctionName {
-					operatorType = UnaryOperator
+					operatorType = UnaryFunction
 				}
 			}
-			if previousNode == nil && operatorType == UnaryOperator {
+			if previousNode == nil && operatorType == UnaryFunction {
 				currentNode = &Node{
 					Id:    id,
 					Type:  operatorType,
@@ -349,7 +349,7 @@ func createTree(t *SyntaxTree, parsedQuery string, startId int) (*Node, int) {
 
 				continue
 			}
-			if previousNode != nil && operatorType == UnaryOperator {
+			if previousNode != nil && operatorType == UnaryFunction {
 				currentNode = &Node{
 					Id:     id,
 					Type:   operatorType,
@@ -359,7 +359,7 @@ func createTree(t *SyntaxTree, parsedQuery string, startId int) (*Node, int) {
 				if previousNode.LeftChild == nil {
 					previousNode.LeftChild = currentNode
 				} else {
-					if currentNode.Type != Operator && currentNode.Type != UnaryOperator {
+					if currentNode.Type != Operator && currentNode.Type != UnaryFunction {
 						currentNode.Type = RightOperand
 					}
 					previousNode.RightChild = currentNode
@@ -386,7 +386,7 @@ func createTree(t *SyntaxTree, parsedQuery string, startId int) (*Node, int) {
 				Value:     parsedQueryPart,
 			}
 
-			if previousNode.Type != Operator && previousNode.Type != UnaryOperator {
+			if previousNode.Type != Operator && previousNode.Type != UnaryFunction {
 				previousNode.Type = LeftOperand
 			}
 			currentNode.Parent = previousNode.Parent
@@ -426,7 +426,7 @@ func createTree(t *SyntaxTree, parsedQuery string, startId int) (*Node, int) {
 		nodeType := LeftOperand
 		for _, unaryFunction := range t.UnaryFunctionParsers {
 			if parsedQueryPart == unaryFunction.FunctionName {
-				nodeType = UnaryOperator
+				nodeType = UnaryFunction
 			}
 		}
 
@@ -453,7 +453,7 @@ func (t SyntaxTree) String() string {
 	graphData := "graph {\n"
 	nodesVisited := map[int]bool{}
 	for !nodesVisited[currentNode.Id] {
-		if currentNode.Type == Operator || currentNode.Type == UnaryOperator {
+		if currentNode.Type == Operator || currentNode.Type == UnaryFunction {
 			if currentNode.LeftChild != nil && !nodesVisited[currentNode.LeftChild.Id] {
 				currentNode = currentNode.LeftChild
 
