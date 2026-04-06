@@ -94,3 +94,9 @@ func firstExample() {
 
 will result in the following tree:
 ![Syntax Tree](.img/tree.png)
+
+## 🗺️ Roadmap
+
+- [ ] Use Pratt parser algorithm
+- [ ] Parse right associativity
+- [ ] Parse postfix expressions
