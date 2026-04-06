@@ -247,7 +247,7 @@ func (l *Lexer) Tokenize(expression string) *TokenStream {
 			}
 			i++
 			foundType = true
-		} else if expression[i] == ' ' && operandType != StringOperand {
+		} else if ((l.TokenSeparator != byte(0) && expression[i] == l.TokenSeparator) || expression[i] == ' ') && operandType != StringOperand {
 			i++
 			continue
 		}
@@ -264,6 +264,12 @@ func (l *Lexer) Tokenize(expression string) *TokenStream {
 		} else {
 			operand.WriteByte(expression[i])
 			i++
+			if i >= len(expression) {
+				tokens = append(tokens, Token{
+					Value: operand.String(),
+					Type:  operandType,
+				})
+			}
 		}
 	}
 

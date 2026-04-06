@@ -292,6 +292,17 @@ func TestLexer_Tokenize_ReturnCorrectTokens(t *testing.T) {
 		lexer          *Lexer
 		expectedTokens []Token
 	}{
+		"math simple example": {
+			query: "1+2*3",
+			lexer: mathLexer,
+			expectedTokens: []Token{
+				{Value: "1", Type: Operand},
+				{Value: "+", Type: BinaryOperator},
+				{Value: "2", Type: Operand},
+				{Value: "*", Type: BinaryOperator},
+				{Value: "3", Type: Operand},
+			},
+		},
 		"math example": {
 			query: "-1+pow(2+3*4,pow((-1+sqrt(3))*4,3))",
 			lexer: mathLexer,

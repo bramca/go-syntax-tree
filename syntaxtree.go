@@ -61,6 +61,11 @@ type SyntaxTree struct {
 	// Define a separator that can be used to separate the operators and operands during parsing
 	// This is a string that cannot exist in the query character space
 	Separator string
+
+	// Pratt parser changes
+	Lexer *Lexer
+
+	Precendence map[string]int
 }
 
 type OperatorParser struct {
@@ -89,6 +94,25 @@ type Node struct {
 	LeftChild  *Node
 	RightChild *Node
 	IsGroup    bool
+}
+
+func (t *SyntaxTree) BuildTree(query string) error {
+	tokenStream := t.Lexer.Tokenize(query)
+
+	parser := PrattParser{
+		Precendence: t.Precendence,
+	}
+
+	root, nodes, err := parser.Parse(tokenStream, 0, 0, t.Nodes)
+
+	if err != nil {
+		return err
+	}
+
+	t.Root = root
+	t.Nodes = nodes
+
+	return nil
 }
 
 func (t *SyntaxTree) ConstructTree(query string) error {
@@ -467,7 +491,7 @@ func (t SyntaxTree) String() string {
 		}
 		nodesVisited[currentNode.Id] = true
 		if currentNode.Parent != nil {
-			graphData = fmt.Sprintf("%s\t\"%d [%s]\" -- \"%d [%s]\"\n", graphData, currentNode.Parent.Id, currentNode.Parent.Value, currentNode.Id, currentNode.Value)
+			graphData = fmt.Sprintf("%s\t\"%d-%s [%s]\" -- \"%d-%s [%s]\"\n", graphData, currentNode.Parent.Id, currentNode.Parent.Type, currentNode.Parent.Value, currentNode.Id, currentNode.Type, currentNode.Value)
 			currentNode = currentNode.Parent
 		}
 	}
