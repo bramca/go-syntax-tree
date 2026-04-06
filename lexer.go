@@ -1,7 +1,6 @@
 package syntaxtree
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -16,7 +15,7 @@ const (
 	UnaryFunc
 	OpenDelimiter
 	CloseDelimiter
-	Separator
+	BinaryFuncSeparator
 	EOF
 )
 
@@ -28,6 +27,8 @@ func (t TokenType) String() string {
 		return "StringOperand"
 	case BinaryOperator:
 		return "BinaryOperator"
+	case UnaryOperator:
+		return "UnaryOperator"
 	case BinaryFunc:
 		return "BinaryFunc"
 	case UnaryFunc:
@@ -36,8 +37,8 @@ func (t TokenType) String() string {
 		return "OpenDelimiter"
 	case CloseDelimiter:
 		return "CloseDelimiter"
-	case Separator:
-		return "Separator"
+	case BinaryFuncSeparator:
+		return "BinaryFuncSeparator"
 	}
 
 	return "Unknown"
@@ -85,45 +86,95 @@ type Lexer struct {
 	CloseDelimiter            byte
 	StringDelimiter           byte
 	BinaryFunctionOpSeparator byte
+	TokenSeparator            byte
 }
 
 func (l *Lexer) Tokenize(expression string) *TokenStream {
-	operatorIndices := map[int]string{}
+	binaryOpIndices := map[int]string{}
+	binaryOpValidatePrefix := func(prefix byte) bool {
+		return (l.TokenSeparator == byte(0) || prefix == l.TokenSeparator) &&
+			(l.OpenDelimiter == byte(0) || prefix != l.OpenDelimiter)
+	}
+	binaryOpValidateSuffix := func(suffix byte) bool {
+		return (l.TokenSeparator == byte(0) || suffix == l.TokenSeparator) &&
+			(l.CloseDelimiter == byte(0) || suffix != l.CloseDelimiter)
+	}
 	for _, op := range l.BinaryOperators {
 		inputCopy := expression
 		inputOffset := 0
 		for index := strings.Index(expression, op); index >= 0; index = strings.Index(inputCopy, op) {
-			operatorIndices[index+inputOffset] = op
+			valid := index-1 > -1 && index+len(op) < len(inputCopy) && binaryOpValidatePrefix(inputCopy[index-1]) && binaryOpValidateSuffix(inputCopy[index+len(op)])
+
+			if valid {
+				binaryOpIndices[index+inputOffset] = op
+			}
 			inputOffset += len(inputCopy[:index+len(op)])
 			inputCopy = inputCopy[index+len(op):]
 		}
 	}
 
 	binaryFuncIndices := map[int]string{}
+	binaryFuncValidatePrefix := func(prefix byte) bool {
+		return (l.OpenDelimiter == byte(0) || prefix == l.OpenDelimiter) ||
+			(l.TokenSeparator == byte(0) || prefix == l.TokenSeparator)
+	}
+
+	binaryFuncValidateSuffix := func(suffix byte) bool {
+		return l.OpenDelimiter == byte(0) || suffix == l.OpenDelimiter
+	}
 	for _, op := range l.BinaryFunctions {
 		inputCopy := expression
 		inputOffset := 0
 		for index := strings.Index(expression, op); index >= 0; index = strings.Index(inputCopy, op) {
-			binaryFuncIndices[index+inputOffset] = op
+			valid := (index == 0 || binaryFuncValidatePrefix(inputCopy[index-1])) &&
+				index+len(op) < len(inputCopy) &&
+				binaryFuncValidateSuffix(inputCopy[index+len(op)])
+			if valid {
+				binaryFuncIndices[index+inputOffset] = op
+			}
 			inputOffset += len(inputCopy[:index+len(op)])
 			inputCopy = inputCopy[index+len(op):]
 		}
 	}
 
 	unaryFuncIndices := map[int]string{}
+	unaryFuncValidatePrefix := func(prefix byte) bool {
+		return (l.OpenDelimiter == byte(0) || prefix == l.OpenDelimiter) ||
+			(l.TokenSeparator == byte(0) || prefix == l.TokenSeparator)
+	}
+	unaryFunxValidateSuffix := func(suffix byte) bool {
+		return l.OpenDelimiter == byte(0) || suffix == l.OpenDelimiter
+	}
 	for _, op := range l.UnaryFunctions {
 		inputCopy := expression
 		inputOffset := 0
 		for index := strings.Index(expression, op); index >= 0; index = strings.Index(inputCopy, op) {
-			unaryFuncIndices[index+inputOffset] = op
+			valid := (index == 0 || unaryFuncValidatePrefix(inputCopy[index-1])) && index+len(op) < len(inputCopy) && unaryFunxValidateSuffix(inputCopy[index+len(op)])
+			if valid {
+				unaryFuncIndices[index+inputOffset] = op
+			}
 			inputOffset += len(inputCopy[:index+len(op)])
 			inputCopy = inputCopy[index+len(op):]
 		}
 	}
 
-	fmt.Printf("operatorIndices: %+v\n", operatorIndices)
-	fmt.Printf("binaryFunctions: %+v\n", binaryFuncIndices)
-	fmt.Printf("unaryFunctions: %+v\n", unaryFuncIndices)
+	unaryOpIndices := map[int]string{}
+	unaryOpValidatePrefix := func(prefix byte) bool {
+		return (l.OpenDelimiter == byte(0) || prefix == l.OpenDelimiter) ||
+			(l.TokenSeparator == byte(0) || prefix == l.TokenSeparator)
+	}
+	for _, op := range l.UnaryOperators {
+		inputCopy := expression
+		inputOffset := 0
+		for index := strings.Index(expression, op); index >= 0; index = strings.Index(inputCopy, op) {
+			valid := (index == 0 || unaryOpValidatePrefix(inputCopy[index-1]))
+			if valid {
+				unaryOpIndices[index+inputOffset] = op
+			}
+			inputOffset += len(inputCopy[:index+len(op)])
+			inputCopy = inputCopy[index+len(op):]
+		}
+	}
 
 	tokens := []Token{}
 
@@ -133,24 +184,31 @@ func (l *Lexer) Tokenize(expression string) *TokenStream {
 	for i < len(expression) {
 		foundType := false
 		var token Token
-		if op, ok := operatorIndices[i]; ok {
+		if op, ok := binaryOpIndices[i]; ok && operandType != StringOperand {
 			token = Token{
 				Value: op,
 				Type:  BinaryOperator,
 			}
 			i += len(op)
 			foundType = true
-		} else if op, ok := binaryFuncIndices[i]; ok {
+		} else if op, ok := binaryFuncIndices[i]; ok && operandType != StringOperand {
 			token = Token{
 				Value: op,
 				Type:  BinaryFunc,
 			}
 			i += len(op)
 			foundType = true
-		} else if op, ok := unaryFuncIndices[i]; ok {
+		} else if op, ok := unaryFuncIndices[i]; ok && operandType != StringOperand {
 			token = Token{
 				Value: op,
 				Type:  UnaryFunc,
+			}
+			i += len(op)
+			foundType = true
+		} else if op, ok := unaryOpIndices[i]; ok && operandType != StringOperand {
+			token = Token{
+				Value: op,
+				Type:  UnaryOperator,
 			}
 			i += len(op)
 			foundType = true
@@ -182,10 +240,10 @@ func (l *Lexer) Tokenize(expression string) *TokenStream {
 				operand.Reset()
 				i++
 			}
-		} else if expression[i] == l.BinaryFunctionOpSeparator {
+		} else if expression[i] == l.BinaryFunctionOpSeparator && operandType != StringOperand {
 			token = Token{
 				Value: string(expression[i]),
-				Type:  Separator,
+				Type:  BinaryFuncSeparator,
 			}
 			i++
 			foundType = true

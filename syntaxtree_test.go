@@ -218,8 +218,8 @@ func TestNodeTypeString_ReturnsCorrectValue(t *testing.T) {
 			expectedResult: "Operator",
 		},
 		"unaryoperator": {
-			nodeType:       UnaryOperator,
-			expectedResult: "UnaryOperator",
+			nodeType:       UnaryFunction,
+			expectedResult: "UnaryFunction",
 		},
 		"leftoperand": {
 			nodeType:       LeftOperand,
