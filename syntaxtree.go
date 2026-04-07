@@ -104,7 +104,6 @@ func (t *SyntaxTree) BuildTree(query string) error {
 	}
 
 	root, _, nodes, err := parser.Parse(tokenStream, 0, 0, t.Nodes)
-
 	if err != nil {
 		return err
 	}

@@ -174,7 +174,10 @@ func main() {
 
 		imgCmd := exec.Command("wezterm", "imgcat", "tree.png")
 		stdout, _ := imgCmd.StdoutPipe()
-		imgCmd.Start()
+		err = imgCmd.Start()
+		if err != nil {
+			fmt.Printf("error starting wezterm command: %s\n", err)
+		}
 
 		scanner := bufio.NewScanner(stdout)
 		scanner.Split(bufio.ScanWords)
@@ -182,7 +185,10 @@ func main() {
 			m := scanner.Text()
 			fmt.Println(m)
 		}
-		imgCmd.Wait()
+		err = imgCmd.Wait()
+		if err != nil {
+			fmt.Printf("err while waiting: %s\n", err)
+		}
 	}
 
 	for i, tc := range testCasesOdata {
@@ -214,7 +220,10 @@ func main() {
 
 		imgCmd := exec.Command("wezterm", "imgcat", "tree.png")
 		stdout, _ := imgCmd.StdoutPipe()
-		imgCmd.Start()
+		err = imgCmd.Start()
+		if err != nil {
+			fmt.Printf("error starting wezterm command: %s\n", err)
+		}
 		scanner := bufio.NewScanner(stdout)
 		scanner.Split(bufio.ScanWords)
 		for scanner.Scan() {

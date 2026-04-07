@@ -106,7 +106,6 @@ func TestLexer_TokenType_CorrectString(t *testing.T) {
 			Equal(t, result, testData.expectedResult)
 		})
 	}
-
 }
 
 func TestLexer_TokenStreamNext_ReturnsCorrectToken(t *testing.T) {
@@ -163,7 +162,6 @@ func TestLexer_TokenStreamNext_ReturnsCorrectToken(t *testing.T) {
 				Type:  Operand,
 			},
 			expectedTokensLeft: []Token{
-
 				{
 					Value: "+",
 					Type:  BinaryOperator,
