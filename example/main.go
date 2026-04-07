@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"os"
 	"os/exec"
@@ -154,10 +153,10 @@ func main() {
 			os.Exit(2)
 		}
 
-		fmt.Println("Nodes list:")
-		for _, node := range mathTree.Nodes {
-			fmt.Printf("%d-[%s]-[%s] ", node.Id, node.Value, node.Type)
-		}
+		// fmt.Println("Nodes list:")
+		// for _, node := range mathTree.Nodes {
+		// 	fmt.Printf("%d-[%s]-[%s] ", node.Id, node.Value, node.Type)
+		// }
 		fmt.Println()
 		fmt.Printf("Tree (dotfile format):\n%s\n\n", mathTree)
 		err = os.WriteFile("tree.dot", []byte(mathTree.String()), os.ModePerm)
@@ -171,24 +170,6 @@ func main() {
 			fmt.Printf("dot command err: %s\n", err)
 			os.Exit(2)
 		}
-
-		imgCmd := exec.Command("wezterm", "imgcat", "tree.png")
-		stdout, _ := imgCmd.StdoutPipe()
-		err = imgCmd.Start()
-		if err != nil {
-			fmt.Printf("error starting wezterm command: %s\n", err)
-		}
-
-		scanner := bufio.NewScanner(stdout)
-		scanner.Split(bufio.ScanWords)
-		for scanner.Scan() {
-			m := scanner.Text()
-			fmt.Println(m)
-		}
-		err = imgCmd.Wait()
-		if err != nil {
-			fmt.Printf("err while waiting: %s\n", err)
-		}
 	}
 
 	for i, tc := range testCasesOdata {
@@ -200,10 +181,10 @@ func main() {
 			os.Exit(2)
 		}
 
-		fmt.Println("Nodes list:")
-		for _, node := range odataTree.Nodes {
-			fmt.Printf("%d-[%s]-[%s] ", node.Id, node.Value, node.Type)
-		}
+		// fmt.Println("Nodes list:")
+		// for _, node := range odataTree.Nodes {
+		// 	fmt.Printf("%d-[%s]-[%s] ", node.Id, node.Value, node.Type)
+		// }
 		fmt.Println()
 		fmt.Printf("Tree (dotfile format):\n%s\n\n", odataTree)
 		err = os.WriteFile("tree.dot", []byte(odataTree.String()), os.ModePerm)
@@ -216,23 +197,6 @@ func main() {
 		if err != nil {
 			fmt.Printf("dot command err: %s\n", err)
 			os.Exit(2)
-		}
-
-		imgCmd := exec.Command("wezterm", "imgcat", "tree.png")
-		stdout, _ := imgCmd.StdoutPipe()
-		err = imgCmd.Start()
-		if err != nil {
-			fmt.Printf("error starting wezterm command: %s\n", err)
-		}
-		scanner := bufio.NewScanner(stdout)
-		scanner.Split(bufio.ScanWords)
-		for scanner.Scan() {
-			m := scanner.Text()
-			fmt.Println(m)
-		}
-		err = imgCmd.Wait()
-		if err != nil {
-			fmt.Printf("err while waiting: %s\n", err)
 		}
 	}
 }

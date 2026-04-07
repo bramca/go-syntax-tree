@@ -8,12 +8,16 @@ type PrattParser struct {
 	Precendence map[string]int
 }
 
-func (p PrattParser) Parse(tokenStream *TokenStream, minPrecedence int, nodeId int, nodes []*Node) (*Node, int, []*Node, error) {
-	lhs, newNodeId, newNodes, err := p.parsePrefix(tokenStream, nodeId, nodes)
-	nodeId = newNodeId
-	nodes = newNodes
+func (p PrattParser) Parse(tokenStream *TokenStream, minPrecedence int, nodes []*Node) (*Node, []*Node, error) {
+	nodeId := 0
+	return p.parse(tokenStream, minPrecedence, &nodeId, nodes)
+}
+
+func (p PrattParser) parse(tokenStream *TokenStream, minPrecedence int, nodeId *int, nodes []*Node) (*Node, []*Node, error) {
+	lhs, newNodes, err := p.parsePrefix(tokenStream, nodeId, nodes)
+	nodes = append(newNodes, lhs)
 	if err != nil {
-		return nil, 0, nil, err
+		return nil, nil, err
 	}
 
 	for {
@@ -25,31 +29,30 @@ func (p PrattParser) Parse(tokenStream *TokenStream, minPrecedence int, nodeId i
 		switch op.Type {
 		case BinaryOperator:
 			if _, ok := p.Precendence[op.Value]; !ok {
-				return nil, 0, nil, &ParseError{Msg: fmt.Sprintf("token not in precedence table: %s", op.Value)}
+				return nil, nil, &ParseError{Msg: fmt.Sprintf("token not in precedence table: %s", op.Value)}
 			}
 
 			prec := p.Precendence[op.Value]
 			if prec < minPrecedence {
-				return lhs, nodeId, nodes, nil
+				return lhs, nodes, nil
 			}
 
 			tokenStream.Next()
 
-			rhs, newNodeId, newNodes, err := p.Parse(tokenStream, prec, nodeId, nodes)
+			rhs, newNodes, err := p.parse(tokenStream, prec+1, nodeId, nodes)
 			if err != nil {
-				return nil, 0, nil, err
+				return nil, nil, err
 			}
-			nodeId = newNodeId
 			nodes = newNodes
 
 			opNode := &Node{
-				Id:         nodeId,
+				Id:         *nodeId,
 				Value:      op.Value,
 				Type:       Operator,
 				RightChild: rhs,
 				LeftChild:  lhs,
 			}
-			nodeId++
+			(*nodeId)++
 			lhs.Parent = opNode
 			rhs.Parent = opNode
 			if lhs.Type == LeftOperand || lhs.Type == RightOperand {
@@ -64,154 +67,142 @@ func (p PrattParser) Parse(tokenStream *TokenStream, minPrecedence int, nodeId i
 			lhs = opNode
 
 		case CloseDelimiter, BinaryFuncSeparator:
-			return lhs, nodeId, nodes, nil
+			return lhs, nodes, nil
 
 		default:
-			return lhs, nodeId, nodes, nil
+			return lhs, nodes, nil
 		}
 	}
 
-	return lhs, nodeId, nodes, nil
+	return lhs, nodes, nil
 }
 
-func (p PrattParser) parsePrefix(tokenStream *TokenStream, nodeId int, nodes []*Node) (*Node, int, []*Node, error) {
+func (p PrattParser) parsePrefix(tokenStream *TokenStream, nodeId *int, nodes []*Node) (*Node, []*Node, error) {
 	token := tokenStream.Next()
 
 	switch token.Type {
 	case Operand, StringOperand:
 		node := &Node{
-			Id:    nodeId,
+			Id:    *nodeId,
 			Value: token.Value,
 			Type:  LeftOperand,
 		}
-		nodeId++
-		nodes = append(nodes, node)
-		return node, nodeId, nodes, nil
+		(*nodeId)++
+		return node, nodes, nil
 
 	case OpenDelimiter:
-		inner, newNodeId, newNodes, err := p.Parse(tokenStream, 0, nodeId, nodes)
+		inner, newNodes, err := p.parse(tokenStream, 0, nodeId, nodes)
 		if err != nil {
-			return nil, 0, nil, err
+			return nil, nil, err
 		}
-		nodeId = newNodeId
 		nodes = newNodes
 
 		closeDelim := tokenStream.Next()
 		if closeDelim.Type != CloseDelimiter {
-			return nil, 0, nil, &ParseError{Msg: fmt.Sprintf("expected ')' but got %s", closeDelim.Value)}
+			return nil, nil, &ParseError{Msg: fmt.Sprintf("expected ')' but got %s", closeDelim.Value)}
 		}
 
 		inner.IsGroup = true
-		return inner, nodeId, nodes, nil
+		return inner, nodes, nil
 
 	case BinaryFunc:
 		openDelim := tokenStream.Next()
 		if openDelim.Type != OpenDelimiter {
-			return nil, 0, nil, &ParseError{Msg: fmt.Sprintf("expected '(' after binary function %s, got %s", token.Value, openDelim.Value)}
+			return nil, nil, &ParseError{Msg: fmt.Sprintf("expected '(' after binary function %s, got %s", token.Value, openDelim.Value)}
 		}
 
-		arg1, newNodeId, newNodes, err := p.Parse(tokenStream, 0, nodeId, nodes)
+		arg1, newNodes, err := p.parse(tokenStream, 0, nodeId, nodes)
 		if err != nil {
-			return nil, 0, nil, err
+			return nil, nil, err
 		}
-		nodeId = newNodeId
 		nodes = newNodes
 
 		separator := tokenStream.Next()
 		if separator.Type != BinaryFuncSeparator {
-			return nil, 0, nil, &ParseError{Msg: fmt.Sprintf("expected ',' in binary function %s, got %s", token.Value, separator.Value)}
+			return nil, nil, &ParseError{Msg: fmt.Sprintf("expected ',' in binary function %s, got %s", token.Value, separator.Value)}
 		}
 
-		arg2, newNodeId, newNodes, err := p.Parse(tokenStream, 0, nodeId, nodes)
+		arg2, newNodes, err := p.parse(tokenStream, 0, nodeId, nodes)
 		if err != nil {
-			return nil, 0, nil, err
+			return nil, nil, err
 		}
-		nodeId = newNodeId
 		nodes = newNodes
 
 		closeDelim := tokenStream.Next()
 		if closeDelim.Type != CloseDelimiter {
-			return nil, 0, nil, &ParseError{Msg: fmt.Sprintf("expected ')' after binary function %s, got %s", token.Value, closeDelim.Value)}
+			return nil, nil, &ParseError{Msg: fmt.Sprintf("expected ')' after binary function %s, got %s", token.Value, closeDelim.Value)}
 		}
 
 		funcNode := &Node{
-			Id:         nodeId,
+			Id:         *nodeId,
 			Value:      token.Value,
 			Type:       Operator,
 			LeftChild:  arg1,
 			RightChild: arg2,
 		}
-		nodeId++
+		(*nodeId)++
 		arg1.Parent = funcNode
 		arg2.Parent = funcNode
-		if arg1.Type == LeftOperand || arg1.Type == RightOperand {
+		if arg1.Type != Operator && arg1.Type != UnaryFunction {
 			arg1.Type = LeftOperand
 		}
-		if arg2.Type == LeftOperand || arg2.Type == RightOperand {
+		if arg2.Type != Operator && arg2.Type != UnaryFunction {
 			arg2.Type = RightOperand
 		}
 
-		nodes = append(nodes, funcNode)
-
-		return funcNode, nodeId, nodes, nil
+		return funcNode, nodes, nil
 
 	case UnaryFunc:
 		openDelim := tokenStream.Next()
 		if openDelim.Type != OpenDelimiter {
-			return nil, 0, nil, &ParseError{Msg: fmt.Sprintf("expected '(' after unary function %s, got %s", token.Value, openDelim.Value)}
+			return nil, nil, &ParseError{Msg: fmt.Sprintf("expected '(' after unary function %s, got %s", token.Value, openDelim.Value)}
 		}
 
-		arg, newNodeId, newNodes, err := p.Parse(tokenStream, 0, nodeId, nodes)
+		arg, newNodes, err := p.parse(tokenStream, 0, nodeId, nodes)
 		if err != nil {
-			return nil, 0, nil, err
+			return nil, nil, err
 		}
-		nodeId = newNodeId
 		nodes = newNodes
 
 		closeDelim := tokenStream.Next()
 		if closeDelim.Type != CloseDelimiter {
-			return nil, 0, nil, &ParseError{Msg: fmt.Sprintf("expected ')' after unary function %s, got %s", token.Value, closeDelim.Value)}
+			return nil, nil, &ParseError{Msg: fmt.Sprintf("expected ')' after unary function %s, got %s", token.Value, closeDelim.Value)}
 		}
 
 		funcNode := &Node{
-			Id:        nodeId,
+			Id:        *nodeId,
 			Value:     token.Value,
 			Type:      UnaryFunction,
 			LeftChild: arg,
 		}
-		nodeId++
+		(*nodeId)++
 		arg.Parent = funcNode
-		if arg.Type != UnaryFunction {
+		if arg.Type != UnaryFunction && arg.Type != Operator {
 			arg.Type = LeftOperand
 		}
 
-		nodes = append(nodes, funcNode)
-
-		return funcNode, nodeId, nodes, nil
+		return funcNode, nodes, nil
 
 	case UnaryOperator:
-		operand, newNodeId, newNodes, err := p.Parse(tokenStream, 100, nodeId, nodes)
+		operand, newNodes, err := p.parse(tokenStream, 100, nodeId, nodes)
 		if err != nil {
-			return nil, 0, nil, err
+			return nil, nil, err
 		}
-		nodeId = newNodeId
 		nodes = newNodes
 
 		opNode := &Node{
-			Id:        nodeId,
+			Id:        *nodeId,
 			Value:     token.Value,
 			Type:      UnaryFunction,
 			LeftChild: operand,
 		}
-		nodeId++
+		(*nodeId)++
 		operand.Parent = opNode
 		operand.Type = LeftOperand
 
-		nodes = append(nodes, opNode)
-
-		return opNode, nodeId, nodes, nil
+		return opNode, nodes, nil
 
 	default:
-		return nil, 0, nil, &ParseError{Msg: fmt.Sprintf("unexpected token: %s (%s)", token.Value, token.Type)}
+		return nil, nil, &ParseError{Msg: fmt.Sprintf("unexpected token: %s (%s)", token.Value, token.Type)}
 	}
 }
