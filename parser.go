@@ -29,7 +29,7 @@ func (p PrattParser) parse(tokenStream *TokenStream, minPrecedence int, nodeId *
 		switch op.Type {
 		case BinaryOperator:
 			if _, ok := p.Precendence[op.Value]; !ok {
-				return nil, nil, &ParseError{Msg: fmt.Sprintf("token not in precedence table: %s", op.Value)}
+				return nil, nil, &ParseError{Msg: fmt.Sprintf("token %q not in precedence table", op.Value)}
 			}
 
 			prec := p.Precendence[op.Value]
@@ -68,9 +68,6 @@ func (p PrattParser) parse(tokenStream *TokenStream, minPrecedence int, nodeId *
 
 		case CloseDelimiter, BinaryFuncSeparator:
 			return lhs, nodes, nil
-
-		default:
-			return lhs, nodes, nil
 		}
 	}
 
@@ -99,7 +96,7 @@ func (p PrattParser) parsePrefix(tokenStream *TokenStream, nodeId *int, nodes []
 
 		closeDelim := tokenStream.Next()
 		if closeDelim.Type != CloseDelimiter {
-			return nil, nil, &ParseError{Msg: fmt.Sprintf("expected ')' but got %s", closeDelim.Value)}
+			return nil, nil, &ParseError{Msg: fmt.Sprintf("expected ')' but got %q", closeDelim.Value)}
 		}
 
 		inner.IsGroup = true
@@ -108,7 +105,7 @@ func (p PrattParser) parsePrefix(tokenStream *TokenStream, nodeId *int, nodes []
 	case BinaryFunc:
 		openDelim := tokenStream.Next()
 		if openDelim.Type != OpenDelimiter {
-			return nil, nil, &ParseError{Msg: fmt.Sprintf("expected '(' after binary function %s, got %s", token.Value, openDelim.Value)}
+			return nil, nil, &ParseError{Msg: fmt.Sprintf("expected '(' after binary function %s, got %q", token.Value, openDelim.Value)}
 		}
 
 		arg1, newNodes, err := p.parse(tokenStream, 0, nodeId, nodes)
@@ -119,7 +116,7 @@ func (p PrattParser) parsePrefix(tokenStream *TokenStream, nodeId *int, nodes []
 
 		separator := tokenStream.Next()
 		if separator.Type != BinaryFuncSeparator {
-			return nil, nil, &ParseError{Msg: fmt.Sprintf("expected ',' in binary function %s, got %s", token.Value, separator.Value)}
+			return nil, nil, &ParseError{Msg: fmt.Sprintf("expected ',' in binary function %s, got %q", token.Value, separator.Value)}
 		}
 
 		arg2, newNodes, err := p.parse(tokenStream, 0, nodeId, nodes)
@@ -130,7 +127,7 @@ func (p PrattParser) parsePrefix(tokenStream *TokenStream, nodeId *int, nodes []
 
 		closeDelim := tokenStream.Next()
 		if closeDelim.Type != CloseDelimiter {
-			return nil, nil, &ParseError{Msg: fmt.Sprintf("expected ')' after binary function %s, got %s", token.Value, closeDelim.Value)}
+			return nil, nil, &ParseError{Msg: fmt.Sprintf("expected ')' after binary function %s, got %q", token.Value, closeDelim.Value)}
 		}
 
 		funcNode := &Node{
@@ -155,7 +152,7 @@ func (p PrattParser) parsePrefix(tokenStream *TokenStream, nodeId *int, nodes []
 	case UnaryFunc:
 		openDelim := tokenStream.Next()
 		if openDelim.Type != OpenDelimiter {
-			return nil, nil, &ParseError{Msg: fmt.Sprintf("expected '(' after unary function %s, got %s", token.Value, openDelim.Value)}
+			return nil, nil, &ParseError{Msg: fmt.Sprintf("expected '(' after unary function %s, got %q", token.Value, openDelim.Value)}
 		}
 
 		arg, newNodes, err := p.parse(tokenStream, 0, nodeId, nodes)
@@ -166,7 +163,7 @@ func (p PrattParser) parsePrefix(tokenStream *TokenStream, nodeId *int, nodes []
 
 		closeDelim := tokenStream.Next()
 		if closeDelim.Type != CloseDelimiter {
-			return nil, nil, &ParseError{Msg: fmt.Sprintf("expected ')' after unary function %s, got %s", token.Value, closeDelim.Value)}
+			return nil, nil, &ParseError{Msg: fmt.Sprintf("expected ')' after unary function %s, got %q", token.Value, closeDelim.Value)}
 		}
 
 		funcNode := &Node{
