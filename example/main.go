@@ -1,174 +1,229 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"os"
-	"regexp"
+	"os/exec"
 
 	syntaxtree "github.com/bramca/go-syntax-tree"
 )
 
 func main() {
-	binaryOperators := []string{
-		"*",
-		"/",
-		"+",
-		"-",
-	}
-
-	unaryOperators := []string{
-		"-",
-	}
-
-	binaryFunctions := []string{
-		"pow",
-	}
-
-	unaryFunctions := []string{
-		"sqrt",
-	}
-
 	mathLexer := &syntaxtree.Lexer{
-		BinaryOperators:           binaryOperators,
-		UnaryOperators:            unaryOperators,
-		BinaryFunctions:           binaryFunctions,
-		UnaryFunctions:            unaryFunctions,
+		BinaryOperators: []string{
+			"*",
+			"/",
+			"+",
+			"-",
+		},
+		UnaryOperators: []string{
+			"-",
+		},
+		BinaryFunctions: []string{
+			"pow",
+		},
+		UnaryFunctions: []string{
+			"sqrt",
+		},
 		OpenDelimiter:             '(',
 		CloseDelimiter:            ')',
 		BinaryFunctionOpSeparator: ',',
 	}
 
-	query := "1+2*3"
-	tree := syntaxtree.SyntaxTree{
+	odataLexer := &syntaxtree.Lexer{
+		BinaryOperators: []string{
+			"eq",
+			"ne",
+			"gt",
+			"ge",
+			"lt",
+			"le",
+			"and",
+			"or",
+		},
+		BinaryFunctions: []string{
+			"concat",
+			"contains",
+			"endswith",
+			"startswith",
+		},
+		UnaryFunctions: []string{
+			"length",
+			"indexof",
+			"tolower",
+			"toupper",
+			"trim",
+			"year",
+			"month",
+			"day",
+			"hour",
+			"minute",
+			"second",
+			"fractionalsecond",
+			"date",
+			"time",
+			"now",
+			"round",
+			"floor",
+			"ceiling",
+		},
+		OpenDelimiter:             '(',
+		CloseDelimiter:            ')',
+		BinaryFunctionOpSeparator: ',',
+		StringDelimiter:           '\'',
+		TokenSeparator:            ' ',
+	}
+
+	mathTree := syntaxtree.SyntaxTree{
 		Lexer: mathLexer,
 		Precendence: map[string]int{
-			"+": 1,
-			"-": 1,
-			"*": 2,
-			"/": 2,
+			"+":    1,
+			"-":    1,
+			"*":    2,
+			"/":    2,
+			"pow":  3,
+			"sqrt": 3,
 		},
 	}
 
-	// new tree
-	err := tree.BuildTree(query)
-	if err != nil {
-		fmt.Printf("err: %s\n", err)
-		os.Exit(2)
+	odataTree := syntaxtree.SyntaxTree{
+		Lexer: odataLexer,
+		Precendence: map[string]int{
+			"and":              1,
+			"or":               1,
+			"eq":               2,
+			"ne":               2,
+			"gt":               2,
+			"ge":               2,
+			"lt":               2,
+			"le":               2,
+			"length":           3,
+			"indexof":          3,
+			"tolower":          3,
+			"toupper":          3,
+			"trim":             3,
+			"year":             3,
+			"month":            3,
+			"day":              3,
+			"hour":             3,
+			"minute":           3,
+			"second":           3,
+			"fractionalsecond": 3,
+			"date":             3,
+			"time":             3,
+			"now":              3,
+			"round":            3,
+			"floor":            3,
+			"ceiling":          3,
+			"concat":           3,
+			"contains":         3,
+			"endswith":         3,
+			"startswith":       3,
+		},
 	}
 
-	fmt.Printf("new tree:\n%s\n", tree)
-	fmt.Printf("new tree nodes:\n")
-	for _, node := range tree.Nodes {
-		fmt.Printf("\t- %+v\n", node)
+	testCasesMath := []struct {
+		name  string
+		query string
+	}{
+		// {"Basic binary operators", "1+2*3"},
+		// {"Grouping", "(1+2)*3"},
+		// {"Unary functions", "sqrt(4)+sqrt(9)"},
+		// {"Binary functions", "pow(2,3)+sqrt(4)"},
+		// {"Nested functions with operators", "pow(2,3+1)*sqrt(4)"},
+		// {"Complex expression with unary operators and nested functions", "-1+pow(2+3*4,pow((-1+sqrt(3))*4,3))"},
 	}
 
-	operatorsPrecedence := []string{
-		"pow",
-		"sqrt",
-		"/",
-		"*",
-		"+",
-		"-",
+	testCasesOdata := []struct {
+		name  string
+		query string
+	}{
+		{"odata simple example", "toupper(tolower(name)) eq 'JOHN'"},
+		{"odata simple example multibyte", "contains(tolower(name), 'café')"},
+		{"odata complex example edge cases", "name eq 'test' or anequivalent eq 'name eq contains' or contains(tolower(name), 'contains(not(an), edgecase)')"},
+		{"odata complex example", "name eq 'John' and (concat(lastname,concat(' ', name)) eq 'Smith John' or contains(concat(name,lastname),'Smith') or length(concat(name,lastname)) eq 10)"},
 	}
 
-	// old tree
-	binaryFunctionParsers := make([]syntaxtree.BinaryFunctionParser, len(binaryFunctions))
-	for i, binaryFunction := range binaryFunctions {
-		binaryFunctionParsers[i] = syntaxtree.BinaryFunctionParser{
-			FunctionName:     binaryFunction,
-			OpeningDelimiter: '(',
-			ClosingDelimiter: ')',
-			OperandSeparator: ',',
-		}
-	}
-
-	unaryFunctionParsers := make([]syntaxtree.UnaryFunctionParser, len(unaryFunctions))
-	for i, unaryFunction := range unaryFunctions {
-		unaryFunctionParsers[i] = syntaxtree.UnaryFunctionParser{
-			FunctionName:     unaryFunction,
-			OpeningDelimiter: '(',
-			ClosingDelimiter: ')',
-		}
-	}
-
-	operatorParsers := make([]syntaxtree.OperatorParser, len(binaryOperators))
-	for i, operator := range binaryOperators {
-		operatorParsers[i] = syntaxtree.OperatorParser{
-			OperatorString:  operator,
-			OperatorPattern: regexp.MustCompile(fmt.Sprintf(`([\d\(\)]*)\%s([\d\(\)]*|pow|sqrt)`, operator)),
-		}
-	}
-
-	oldTree := syntaxtree.SyntaxTree{
-		OperatorPrecedence:    operatorsPrecedence,
-		OperatorParsers:       operatorParsers,
-		BinaryFunctionParsers: binaryFunctionParsers,
-		UnaryFunctionParsers:  unaryFunctionParsers,
-		Separator:             ";",
-	}
-
-	err = oldTree.ConstructTree(query)
-	if err != nil {
-		fmt.Printf("err: %s\n", err)
-		os.Exit(2)
-	}
-
-	fmt.Printf("old tree: \n%s\n", oldTree)
-	fmt.Printf("old tree nodes:\n")
-	for _, node := range oldTree.Nodes {
-		fmt.Printf("\t- %+v\n", node)
-	}
-	/*
-		query = "-1+pow(2+3*4,pow((-1+sqrt(3))*4,3))"
-		tokenStream := mathLexer.Tokenize(query)
-		fmt.Printf("query: %s\ntokens: %+v\n", query, tokenStream)
-
-		binaryOperators = []string{
-			"eq",
-			"ne",
-			"and",
-			"or",
+	for i, tc := range testCasesMath {
+		fmt.Printf("=== Test %d: %s ===\n", i+1, tc.name)
+		fmt.Printf("Query: %s\n", tc.query)
+		err := mathTree.BuildTree(tc.query)
+		if err != nil {
+			fmt.Printf("err: %s\n", err)
+			os.Exit(2)
 		}
 
-		binaryFunctions = []string{
-			"contains",
+		fmt.Println("Nodes list:")
+		for _, node := range mathTree.Nodes {
+			fmt.Printf("%d-[%s]-[%s] ", node.Id, node.Value, node.Type)
+		}
+		fmt.Println()
+		fmt.Printf("Tree (dotfile format):\n%s\n\n", mathTree)
+		err = os.WriteFile("tree.dot", []byte(mathTree.String()), os.ModePerm)
+		if err != nil {
+			fmt.Printf("err: %s\n", err)
+			os.Exit(2)
+		}
+		cmd := exec.Command("dot", "-Tpng", "tree.dot", "-o", "tree.png")
+		err = cmd.Run()
+		if err != nil {
+			fmt.Printf("dot command err: %s\n", err)
+			os.Exit(2)
 		}
 
-		unaryFunctions = []string{
-			"tolower",
-			"not",
+		imgCmd := exec.Command("wezterm", "imgcat", "tree.png")
+		stdout, _ := imgCmd.StdoutPipe()
+		imgCmd.Start()
+
+		scanner := bufio.NewScanner(stdout)
+		scanner.Split(bufio.ScanWords)
+		for scanner.Scan() {
+			m := scanner.Text()
+			fmt.Println(m)
+		}
+		imgCmd.Wait()
+	}
+
+	for i, tc := range testCasesOdata {
+		fmt.Printf("=== Test %d: %s ===\n", i+1, tc.name)
+		fmt.Printf("Query: %s\n", tc.query)
+		err := odataTree.BuildTree(tc.query)
+		if err != nil {
+			fmt.Printf("err: %s\n", err)
+			os.Exit(2)
 		}
 
-		odataLexer := syntaxtree.Lexer{
-			BinaryOperators:           binaryOperators,
-			UnaryOperators:            unaryOperators,
-			BinaryFunctions:           binaryFunctions,
-			UnaryFunctions:            unaryFunctions,
-			OpenDelimiter:             '(',
-			CloseDelimiter:            ')',
-			StringDelimiter:           '\'',
-			BinaryFunctionOpSeparator: ',',
-			TokenSeparator:            ' ',
+		fmt.Println("Nodes list:")
+		for _, node := range odataTree.Nodes {
+			fmt.Printf("%d-[%s]-[%s] ", node.Id, node.Value, node.Type)
+		}
+		fmt.Println()
+		fmt.Printf("Tree (dotfile format):\n%s\n\n", odataTree)
+		err = os.WriteFile("tree.dot", []byte(odataTree.String()), os.ModePerm)
+		if err != nil {
+			fmt.Printf("err: %s\n", err)
+			os.Exit(2)
+		}
+		cmd := exec.Command("dot", "-Tpng", "tree.dot", "-o", "tree.png")
+		err = cmd.Run()
+		if err != nil {
+			fmt.Printf("dot command err: %s\n", err)
+			os.Exit(2)
 		}
 
-		query = "name eq 'test' or contains(tolower(name), 'something (else)')"
-		tokenStream = odataLexer.Tokenize(query)
-		fmt.Printf("query: %s\ntokens: %+v\n", query, tokenStream)
-
-		query = "tolower(name) eq 'test'"
-		tokenStream = odataLexer.Tokenize(query)
-		fmt.Printf("query: %s\ntokens: %+v\n", query, tokenStream)
-
-		query = "contains(tolower(name), 'some value')"
-		tokenStream = odataLexer.Tokenize(query)
-		fmt.Printf("query: %s\ntokens: %+v\n", query, tokenStream)
-
-		query = "not(contains(tolower(name), 'some value'))"
-		tokenStream = odataLexer.Tokenize(query)
-		fmt.Printf("query: %s\ntokens: %+v\n", query, tokenStream)
-
-		query = "name eq 'test' or anequivalent eq 'name eq contains' or contains(tolower(name), 'contains(not(an), edgecase)')"
-		tokenStream = odataLexer.Tokenize(query)
-		fmt.Printf("query: %s\ntokens: %+v\n", query, tokenStream)
-	*/
+		imgCmd := exec.Command("wezterm", "imgcat", "tree.png")
+		stdout, _ := imgCmd.StdoutPipe()
+		imgCmd.Start()
+		scanner := bufio.NewScanner(stdout)
+		scanner.Split(bufio.ScanWords)
+		for scanner.Scan() {
+			m := scanner.Text()
+			fmt.Println(m)
+		}
+		err = imgCmd.Wait()
+		if err != nil {
+			fmt.Printf("err while waiting: %s\n", err)
+		}
+	}
 }

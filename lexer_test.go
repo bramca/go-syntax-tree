@@ -159,18 +159,18 @@ func TestLexer_TokenStreamNext_ReturnsCorrectToken(t *testing.T) {
 				},
 			},
 			expectedToken: Token{
-				Value: "2",
+				Value: "1",
 				Type:  Operand,
 			},
 			expectedTokensLeft: []Token{
 
 				{
-					Value: "1",
-					Type:  Operand,
-				},
-				{
 					Value: "+",
 					Type:  BinaryOperator,
+				},
+				{
+					Value: "2",
+					Type:  Operand,
 				},
 			},
 		},
@@ -248,7 +248,7 @@ func TestLexer_TokenStreamPeek_ReturnsCorrectToken(t *testing.T) {
 				},
 			},
 			expectedToken: Token{
-				Value: "2",
+				Value: "1",
 				Type:  Operand,
 			},
 			expectedTokensLeft: []Token{

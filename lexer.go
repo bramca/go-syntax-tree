@@ -58,8 +58,8 @@ func (t *TokenStream) Next() Token {
 		Type: EOF,
 	}
 	if len(t.Tokens) > 0 {
-		token = t.Tokens[len(t.Tokens)-1]
-		t.Tokens = t.Tokens[:len(t.Tokens)-1]
+		token = t.Tokens[0]
+		t.Tokens = t.Tokens[1:]
 	}
 
 	return token
@@ -70,7 +70,7 @@ func (t *TokenStream) Peek() Token {
 		Type: EOF,
 	}
 	if len(t.Tokens) > 0 {
-		token = t.Tokens[len(t.Tokens)-1]
+		token = t.Tokens[0]
 	}
 
 	return token
@@ -116,7 +116,8 @@ func (l *Lexer) Tokenize(expression string) *TokenStream {
 	binaryFuncIndices := map[int]string{}
 	binaryFuncValidatePrefix := func(prefix byte) bool {
 		return (l.OpenDelimiter == byte(0) || prefix == l.OpenDelimiter) ||
-			(l.TokenSeparator == byte(0) || prefix == l.TokenSeparator)
+			(l.TokenSeparator == byte(0) || prefix == l.TokenSeparator) ||
+			(l.BinaryFunctionOpSeparator == byte(0) || prefix == l.BinaryFunctionOpSeparator)
 	}
 
 	binaryFuncValidateSuffix := func(suffix byte) bool {

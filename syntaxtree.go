@@ -103,7 +103,7 @@ func (t *SyntaxTree) BuildTree(query string) error {
 		Precendence: t.Precendence,
 	}
 
-	root, nodes, err := parser.Parse(tokenStream, 0, 0, t.Nodes)
+	root, _, nodes, err := parser.Parse(tokenStream, 0, 0, t.Nodes)
 
 	if err != nil {
 		return err
@@ -491,7 +491,7 @@ func (t SyntaxTree) String() string {
 		}
 		nodesVisited[currentNode.Id] = true
 		if currentNode.Parent != nil {
-			graphData = fmt.Sprintf("%s\t\"%d-%s [%s]\" -- \"%d-%s [%s]\"\n", graphData, currentNode.Parent.Id, currentNode.Parent.Type, currentNode.Parent.Value, currentNode.Id, currentNode.Type, currentNode.Value)
+			graphData = fmt.Sprintf("%s\t\"%d [%s]\" -- \"%d [%s]\"\n", graphData, currentNode.Parent.Id, currentNode.Parent.Value, currentNode.Id, currentNode.Value)
 			currentNode = currentNode.Parent
 		}
 	}
