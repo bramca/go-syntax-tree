@@ -97,7 +97,7 @@ will result in the following tree:
 
 ## 🗺️ Roadmap
 
-- [ ] Use Pratt parser algorithm
-- [ ] Parse unary operators
+- [X] Use Pratt parser algorithm
+- [X] Parse unary operators
 - [ ] Parse right associativity
 - [ ] Parse postfix expressions

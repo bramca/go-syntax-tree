@@ -2,6 +2,7 @@ package syntaxtree
 
 import (
 	"fmt"
+	"maps"
 	"regexp"
 	"slices"
 	"strings"
@@ -103,7 +104,9 @@ func (t *SyntaxTree) BuildTree(query string) error {
 		Precendence: t.Precendence,
 	}
 
-	root, nodes, err := parser.Parse(tokenStream, 0, t.Nodes)
+	minPrecendence := slices.Min(slices.Collect(maps.Values(t.Precendence))) - 1
+
+	root, nodes, err := parser.Parse(tokenStream, minPrecendence, t.Nodes)
 	if err != nil {
 		return err
 	}
@@ -114,6 +117,7 @@ func (t *SyntaxTree) BuildTree(query string) error {
 	return nil
 }
 
+// deprecated
 func (t *SyntaxTree) ConstructTree(query string) error {
 	parsedQuery, err := t.ParseQuery(query)
 	if err != nil {
@@ -125,6 +129,8 @@ func (t *SyntaxTree) ConstructTree(query string) error {
 	return nil
 }
 
+// deprecated
+//
 //nolint:gocognit,gocyclo // complex function, no way around it
 func (t *SyntaxTree) ParseQuery(query string) (string, error) {
 	originalQuery := query
@@ -300,6 +306,8 @@ func (t *SyntaxTree) ParseQuery(query string) (string, error) {
 	return query, nil
 }
 
+// deprecated
+//
 //nolint:gocognit,nestif,gocyclo,gocritic // complex function, no way around it
 func createTree(t *SyntaxTree, parsedQuery string, startId int) (*Node, int) {
 	var currentNode *Node
