@@ -40,7 +40,7 @@ func TestPrattParser_Parse_OperandOnly(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			parser := PrattParser{Precendence: map[string]int{}}
+			parser := PrattParser{Precedence: map[string]int{}}
 			root, nodes, err := parser.Parse(tc.tokenStream, tc.minPrecedence, nil)
 
 			NoError(t, err)
@@ -94,7 +94,7 @@ func TestPrattParser_Parse_BinaryOperator(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			parser := PrattParser{Precendence: map[string]int{"+": 1, "*": 2}}
+			parser := PrattParser{Precedence: map[string]int{"+": 1, "*": 2}}
 			root, nodes, err := parser.Parse(tc.tokenStream, tc.minPrecedence, nil)
 
 			NoError(t, err)
@@ -162,7 +162,7 @@ func TestPrattParser_Parse_Precedence(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			parser := PrattParser{Precendence: map[string]int{"+": 1, "*": 2}}
+			parser := PrattParser{Precedence: map[string]int{"+": 1, "*": 2}}
 			root, _, err := parser.Parse(tc.tokenStream, tc.minPrecedence, nil)
 
 			NoError(t, err)
@@ -216,12 +216,44 @@ func TestPrattParser_Parse_LeftToRightAssociativity(t *testing.T) {
 			expectedInnerLeftChildValue:  "1",
 			expectedInnerRightChildValue: "2",
 		},
+		"multiplication is left associative": {
+			tokenStream: &TokenStream{
+				Tokens: []Token{
+					{Value: "1", Type: Operand},
+					{Value: "*", Type: BinaryOperator},
+					{Value: "2", Type: Operand},
+					{Value: "*", Type: BinaryOperator},
+					{Value: "3", Type: Operand},
+				},
+			},
+			expectedRootValue:            "*",
+			expectedRootLeftChildValue:   "*",
+			expectedRootRightChildValue:  "3",
+			expectedInnerLeftChildValue:  "1",
+			expectedInnerRightChildValue: "2",
+		},
+		"division is left associative": {
+			tokenStream: &TokenStream{
+				Tokens: []Token{
+					{Value: "1", Type: Operand},
+					{Value: "/", Type: BinaryOperator},
+					{Value: "2", Type: Operand},
+					{Value: "/", Type: BinaryOperator},
+					{Value: "3", Type: Operand},
+				},
+			},
+			expectedRootValue:            "/",
+			expectedRootLeftChildValue:   "/",
+			expectedRootRightChildValue:  "3",
+			expectedInnerLeftChildValue:  "1",
+			expectedInnerRightChildValue: "2",
+		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			parser := PrattParser{Precendence: map[string]int{"+": 1, "-": 1}}
+			parser := PrattParser{Precedence: map[string]int{"+": 1, "-": 1, "*": 2, "/": 2}}
 			root, _, err := parser.Parse(tc.tokenStream, 0, nil)
 
 			NoError(t, err)
@@ -265,7 +297,7 @@ func TestPrattParser_Parse_Grouping(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			parser := PrattParser{Precendence: map[string]int{"+": 1, "-": 1, "*": 2, "/": 2}}
+			parser := PrattParser{Precedence: map[string]int{"+": 1, "-": 1, "*": 2, "/": 2}}
 			root, _, err := parser.Parse(tc.tokenStream, 0, nil)
 
 			NoError(t, err)
@@ -305,7 +337,7 @@ func TestPrattParser_Parse_BinaryFunction(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			parser := PrattParser{Precendence: map[string]int{}}
+			parser := PrattParser{Precedence: map[string]int{}}
 			root, _, err := parser.Parse(tc.tokenStream, 0, nil)
 
 			NoError(t, err)
@@ -356,7 +388,7 @@ func TestPrattParser_Parse_UnaryFunction(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			parser := PrattParser{Precendence: map[string]int{}}
+			parser := PrattParser{Precedence: map[string]int{}}
 			root, _, err := parser.Parse(tc.tokenStream, 0, nil)
 
 			NoError(t, err)
@@ -401,7 +433,7 @@ func TestPrattParser_Parse_UnaryOperator(t *testing.T) {
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			parser := PrattParser{Precendence: map[string]int{"+": 1}}
+			parser := PrattParser{Precedence: map[string]int{"+": 1}}
 			root, _, err := parser.Parse(tc.tokenStream, 0, nil)
 
 			NoError(t, err)
@@ -550,8 +582,8 @@ func TestPrattParser_Parse_Error(t *testing.T) {
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-			parser := PrattParser{Precendence: map[string]int{"+": 1, "*": 2}}
+			// t.Parallel()
+			parser := PrattParser{Precedence: map[string]int{"+": 1, "*": 2}}
 			_, _, err := parser.Parse(tc.tokenStream, 0, nil)
 
 			Error(t, err)
@@ -570,7 +602,7 @@ func TestPrattParser_Parse_EOFStopsParsing(t *testing.T) {
 			{Value: "4", Type: Operand},
 		},
 	}
-	parser := PrattParser{Precendence: map[string]int{}}
+	parser := PrattParser{Precedence: map[string]int{}}
 	root, _, err := parser.Parse(tokenStream, 0, nil)
 
 	NoError(t, err)
@@ -588,7 +620,7 @@ func TestPrattParser_Parse_NodeIdsAreSequential(t *testing.T) {
 			{Value: "3", Type: Operand},
 		},
 	}
-	parser := PrattParser{Precendence: map[string]int{"+": 1, "*": 2}}
+	parser := PrattParser{Precedence: map[string]int{"+": 1, "*": 2}}
 	_, nodes, err := parser.Parse(tokenStream, 0, nil)
 
 	NoError(t, err)
@@ -614,7 +646,7 @@ func TestPrattParser_Parse_ParentChildRelationships(t *testing.T) {
 			{Value: "3", Type: Operand},
 		},
 	}
-	parser := PrattParser{Precendence: map[string]int{"+": 1, "*": 2}}
+	parser := PrattParser{Precedence: map[string]int{"+": 1, "*": 2}}
 	root, _, err := parser.Parse(tokenStream, 0, nil)
 
 	NoError(t, err)
@@ -644,7 +676,7 @@ func TestPrattParser_Parse_ComplexNestedExpression(t *testing.T) {
 			{Value: ")", Type: CloseDelimiter},
 		},
 	}
-	parser := PrattParser{Precendence: map[string]int{"+": 1, "*": 2}}
+	parser := PrattParser{Precedence: map[string]int{"+": 1, "*": 2}}
 	root, _, err := parser.Parse(tokenStream, 0, nil)
 
 	NoError(t, err)
@@ -671,7 +703,7 @@ func TestPrattParser_Parse_BinaryFunctionWithOperator(t *testing.T) {
 			{Value: "1", Type: Operand},
 		},
 	}
-	parser := PrattParser{Precendence: map[string]int{"+": 1}}
+	parser := PrattParser{Precedence: map[string]int{"+": 1}}
 	root, _, err := parser.Parse(tokenStream, 0, nil)
 
 	NoError(t, err)
@@ -699,7 +731,7 @@ func TestPrattParser_Parse_BinaryFunctionInGroup(t *testing.T) {
 			{Value: "2", Type: Operand},
 		},
 	}
-	parser := PrattParser{Precendence: map[string]int{"+": 1, "*": 2}}
+	parser := PrattParser{Precedence: map[string]int{"+": 1, "*": 2}}
 	root, _, err := parser.Parse(tokenStream, 0, nil)
 
 	NoError(t, err)

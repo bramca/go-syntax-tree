@@ -118,10 +118,10 @@ func TestBuildTree_CreatesCorrectGraph(t *testing.T) {
 			},
 			query: "1+2*3",
 			expectedGraph: `graph {
-	"1 [+]" -- "0 [1]"
-	"3 [*]" -- "2 [2]"
-	"3 [*]" -- "4 [3]"
-	"1 [+]" -- "3 [*]"
+	"4 [+]" -- "0 [1]"
+	"3 [*]" -- "1 [2]"
+	"3 [*]" -- "2 [3]"
+	"4 [+]" -- "3 [*]"
 }`,
 		},
 		"math simple example grouping": {
@@ -131,10 +131,10 @@ func TestBuildTree_CreatesCorrectGraph(t *testing.T) {
 			},
 			query: "(1+2)*3",
 			expectedGraph: `graph {
-	"1 [+]" -- "0 [1]"
-	"1 [+]" -- "2 [2]"
-	"3 [*]" -- "1 [+]"
-	"3 [*]" -- "4 [3]"
+	"2 [+]" -- "0 [1]"
+	"2 [+]" -- "1 [2]"
+	"4 [*]" -- "2 [+]"
+	"4 [*]" -- "3 [3]"
 }`,
 		},
 		"math simple example unary function": {
@@ -158,16 +158,16 @@ func TestBuildTree_CreatesCorrectGraph(t *testing.T) {
 			},
 			query: "(1+2)*sqrt(pow(2,pow(3,sqrt(3))))",
 			expectedGraph: `graph {
-	"1 [+]" -- "0 [1]"
-	"1 [+]" -- "2 [2]"
-	"3 [*]" -- "1 [+]"
-	"6 [pow]" -- "5 [2]"
-	"8 [pow]" -- "7 [3]"
-	"9 [sqrt]" -- "10 [3]"
-	"8 [pow]" -- "9 [sqrt]"
-	"6 [pow]" -- "8 [pow]"
-	"4 [sqrt]" -- "6 [pow]"
-	"3 [*]" -- "4 [sqrt]"
+	"2 [+]" -- "0 [1]"
+	"2 [+]" -- "1 [2]"
+	"10 [*]" -- "2 [+]"
+	"8 [pow]" -- "3 [2]"
+	"7 [pow]" -- "4 [3]"
+	"6 [sqrt]" -- "5 [3]"
+	"7 [pow]" -- "6 [sqrt]"
+	"8 [pow]" -- "7 [pow]"
+	"9 [sqrt]" -- "8 [pow]"
+	"10 [*]" -- "9 [sqrt]"
 }`,
 		},
 		"math complex example": {
@@ -177,29 +177,29 @@ func TestBuildTree_CreatesCorrectGraph(t *testing.T) {
 			},
 			query: "1-sqrt(pow(2,3)+1)*2/(sqrt(1+1)*pow(3+3,pow(3,sqrt(2))))",
 			expectedGraph: `graph {
-	"1 [-]" -- "0 [1]"
-	"4 [pow]" -- "3 [2]"
-	"4 [pow]" -- "5 [3]"
-	"6 [+]" -- "4 [pow]"
-	"6 [+]" -- "7 [1]"
-	"2 [sqrt]" -- "6 [+]"
-	"8 [*]" -- "2 [sqrt]"
-	"10 [/]" -- "9 [2]"
-	"13 [+]" -- "12 [1]"
-	"13 [+]" -- "14 [1]"
-	"11 [sqrt]" -- "13 [+]"
-	"15 [*]" -- "11 [sqrt]"
-	"17 [+]" -- "16 [3]"
-	"17 [+]" -- "18 [3]"
-	"19 [pow]" -- "17 [+]"
-	"21 [pow]" -- "20 [3]"
-	"22 [sqrt]" -- "23 [2]"
-	"21 [pow]" -- "22 [sqrt]"
-	"19 [pow]" -- "21 [pow]"
-	"15 [*]" -- "19 [pow]"
-	"10 [/]" -- "15 [*]"
-	"8 [*]" -- "10 [/]"
-	"1 [-]" -- "8 [*]"
+	"23 [-]" -- "0 [1]"
+	"3 [pow]" -- "1 [2]"
+	"3 [pow]" -- "2 [3]"
+	"5 [+]" -- "3 [pow]"
+	"5 [+]" -- "4 [1]"
+	"6 [sqrt]" -- "5 [+]"
+	"8 [*]" -- "6 [sqrt]"
+	"8 [*]" -- "7 [2]"
+	"22 [/]" -- "8 [*]"
+	"11 [+]" -- "9 [1]"
+	"11 [+]" -- "10 [1]"
+	"12 [sqrt]" -- "11 [+]"
+	"21 [*]" -- "12 [sqrt]"
+	"15 [+]" -- "13 [3]"
+	"15 [+]" -- "14 [3]"
+	"20 [pow]" -- "15 [+]"
+	"19 [pow]" -- "16 [3]"
+	"18 [sqrt]" -- "17 [2]"
+	"19 [pow]" -- "18 [sqrt]"
+	"20 [pow]" -- "19 [pow]"
+	"21 [*]" -- "20 [pow]"
+	"22 [/]" -- "21 [*]"
+	"23 [-]" -- "22 [/]"
 }`,
 		},
 		"odata simple example": {
@@ -209,10 +209,10 @@ func TestBuildTree_CreatesCorrectGraph(t *testing.T) {
 			},
 			query: "toupper(tolower(name)) eq 'JOHN'",
 			expectedGraph: `graph {
-	"1 [tolower]" -- "2 [name]"
-	"0 [toupper]" -- "1 [tolower]"
-	"3 [eq]" -- "0 [toupper]"
-	"3 [eq]" -- "4 ['JOHN']"
+	"1 [tolower]" -- "0 [name]"
+	"2 [toupper]" -- "1 [tolower]"
+	"4 [eq]" -- "2 [toupper]"
+	"4 [eq]" -- "3 ['JOHN']"
 }`,
 		},
 		"odata simple example multibyte string": {
@@ -234,29 +234,29 @@ func TestBuildTree_CreatesCorrectGraph(t *testing.T) {
 			},
 			query: "name eq 'John' and (concat(lastname,concat(' ', name)) eq 'Smith John' or contains(concat(name,lastname),'Smith') or length(concat(name,lastname)) eq 10)",
 			expectedGraph: `graph {
-	"1 [eq]" -- "0 [name]"
-	"1 [eq]" -- "2 ['John']"
-	"3 [and]" -- "1 [eq]"
-	"5 [concat]" -- "4 [lastname]"
-	"7 [concat]" -- "6 [' ']"
-	"7 [concat]" -- "8 [ name]"
-	"5 [concat]" -- "7 [concat]"
-	"9 [eq]" -- "5 [concat]"
-	"9 [eq]" -- "10 ['Smith John']"
-	"11 [or]" -- "9 [eq]"
-	"13 [concat]" -- "12 [name]"
-	"13 [concat]" -- "14 [lastname]"
-	"15 [contains]" -- "13 [concat]"
-	"15 [contains]" -- "16 ['Smith']"
-	"11 [or]" -- "15 [contains]"
-	"17 [or]" -- "11 [or]"
-	"20 [concat]" -- "19 [name]"
-	"20 [concat]" -- "21 [lastname]"
-	"18 [length]" -- "20 [concat]"
-	"22 [eq]" -- "18 [length]"
-	"22 [eq]" -- "23 [10]"
-	"17 [or]" -- "22 [eq]"
-	"3 [and]" -- "17 [or]"
+	"2 [eq]" -- "0 [name]"
+	"2 [eq]" -- "1 ['John']"
+	"23 [and]" -- "2 [eq]"
+	"7 [concat]" -- "3 [lastname]"
+	"6 [concat]" -- "4 [' ']"
+	"6 [concat]" -- "5 [name]"
+	"7 [concat]" -- "6 [concat]"
+	"9 [eq]" -- "7 [concat]"
+	"9 [eq]" -- "8 ['Smith John']"
+	"15 [or]" -- "9 [eq]"
+	"12 [concat]" -- "10 [name]"
+	"12 [concat]" -- "11 [lastname]"
+	"14 [contains]" -- "12 [concat]"
+	"14 [contains]" -- "13 ['Smith']"
+	"15 [or]" -- "14 [contains]"
+	"22 [or]" -- "15 [or]"
+	"18 [concat]" -- "16 [name]"
+	"18 [concat]" -- "17 [lastname]"
+	"19 [length]" -- "18 [concat]"
+	"21 [eq]" -- "19 [length]"
+	"21 [eq]" -- "20 [10]"
+	"22 [or]" -- "21 [eq]"
+	"23 [and]" -- "22 [or]"
 }`,
 		},
 	}

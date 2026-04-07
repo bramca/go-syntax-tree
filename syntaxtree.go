@@ -101,7 +101,7 @@ func (t *SyntaxTree) BuildTree(query string) error {
 	tokenStream := t.Lexer.Tokenize(query)
 
 	parser := PrattParser{
-		Precendence: t.Precendence,
+		Precedence: t.Precendence,
 	}
 
 	minPrecendence := slices.Min(slices.Collect(maps.Values(t.Precendence))) - 1

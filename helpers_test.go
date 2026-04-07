@@ -69,45 +69,21 @@ var (
 	}
 
 	mathPrecedence = map[string]int{
-		"+":    1,
-		"-":    1,
-		"*":    2,
-		"/":    2,
-		"pow":  3,
-		"sqrt": 3,
+		"+": 1,
+		"-": 1,
+		"*": 2,
+		"/": 2,
 	}
 
 	odataPrecedence = map[string]int{
-		"and":              1,
-		"or":               1,
-		"eq":               2,
-		"ne":               2,
-		"gt":               2,
-		"ge":               2,
-		"lt":               2,
-		"le":               2,
-		"length":           3,
-		"indexof":          3,
-		"tolower":          3,
-		"toupper":          3,
-		"trim":             3,
-		"year":             3,
-		"month":            3,
-		"day":              3,
-		"hour":             3,
-		"minute":           3,
-		"second":           3,
-		"fractionalsecond": 3,
-		"date":             3,
-		"time":             3,
-		"now":              3,
-		"round":            3,
-		"floor":            3,
-		"ceiling":          3,
-		"concat":           3,
-		"contains":         3,
-		"endswith":         3,
-		"startswith":       3,
+		"and": 1,
+		"or":  1,
+		"eq":  2,
+		"ne":  2,
+		"gt":  2,
+		"ge":  2,
+		"lt":  2,
+		"le":  2,
 	}
 )
 
@@ -130,7 +106,7 @@ func Error(t *testing.T, err error) {
 	t.Helper()
 
 	if err == nil {
-		t.Error("Expected err not to be nil but it is")
+		t.Fatal("Expected err not to be nil but it is")
 	}
 }
 
@@ -138,6 +114,6 @@ func NoError(t *testing.T, err error) {
 	t.Helper()
 
 	if err != nil {
-		t.Errorf("Expected error to be nil but it is not. err: %v", err)
+		t.Fatalf("Expected error to be nil but it is not. err: %v", err)
 	}
 }
