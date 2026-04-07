@@ -552,6 +552,9 @@ func TestPrattParser_Parse_EOFStopsParsing(t *testing.T) {
 	tokenStream := &TokenStream{
 		Tokens: []Token{
 			{Value: "5", Type: Operand},
+			{Value: "", Type: EOF},
+			{Value: "+", Type: Operand},
+			{Value: "4", Type: Operand},
 		},
 	}
 	parser := PrattParser{Precendence: map[string]int{}}
