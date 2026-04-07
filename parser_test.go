@@ -417,6 +417,15 @@ func TestPrattParser_Parse_Error(t *testing.T) {
 		tokenStream      *TokenStream
 		expectedErrorMsg string
 	}{
+		"closing delimiter in prefix": {
+			tokenStream: &TokenStream{
+				Tokens: []Token{
+					{Value: ")", Type: CloseDelimiter},
+					{Value: "1", Type: Operand},
+				},
+			},
+			expectedErrorMsg: "failed to parse query: unexpected token: \")\" (CloseDelimiter)",
+		},
 		"missing closing delimiter in group": {
 			tokenStream: &TokenStream{
 				Tokens: []Token{
@@ -490,6 +499,19 @@ func TestPrattParser_Parse_Error(t *testing.T) {
 				},
 			},
 			expectedErrorMsg: "failed to parse query: token \"?\" not in precedence table",
+		},
+		"typo in query": {
+			tokenStream: &TokenStream{Tokens: []Token{
+				{Value: "conct", Type: Operand},
+				{Value: "(", Type: OpenDelimiter},
+				{Value: "'#'", Type: StringOperand},
+				{Value: ",", Type: BinaryFuncSeparator},
+				{Value: "name", Type: Operand},
+				{Value: ")", Type: CloseDelimiter},
+				{Value: "eq", Type: BinaryOperator},
+				{Value: "'#test'", Type: StringOperand},
+			}},
+			expectedErrorMsg: "failed to parse query: unexpected token \"(\" (OpenDelimiter) after \"conct\" (LeftOperand)",
 		},
 	}
 

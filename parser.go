@@ -55,10 +55,10 @@ func (p PrattParser) parse(tokenStream *TokenStream, minPrecedence int, nodeId *
 			(*nodeId)++
 			lhs.Parent = opNode
 			rhs.Parent = opNode
-			if lhs.Type == LeftOperand || lhs.Type == RightOperand {
+			if lhs.Type != Operator && lhs.Type != UnaryFunction {
 				lhs.Type = LeftOperand
 			}
-			if rhs.Type == LeftOperand || rhs.Type == RightOperand {
+			if rhs.Type != Operator && rhs.Type != UnaryFunction {
 				rhs.Type = RightOperand
 			}
 
@@ -68,6 +68,9 @@ func (p PrattParser) parse(tokenStream *TokenStream, minPrecedence int, nodeId *
 
 		case CloseDelimiter, BinaryFuncSeparator:
 			return lhs, nodes, nil
+
+		default:
+			return nil, nil, &ParseError{Msg: fmt.Sprintf("unexpected token %q (%s) after %q (%s)", op.Value, op.Type, lhs.Value, lhs.Type)}
 		}
 	}
 
@@ -200,6 +203,6 @@ func (p PrattParser) parsePrefix(tokenStream *TokenStream, nodeId *int, nodes []
 		return opNode, nodes, nil
 
 	default:
-		return nil, nil, &ParseError{Msg: fmt.Sprintf("unexpected token: %s (%s)", token.Value, token.Type)}
+		return nil, nil, &ParseError{Msg: fmt.Sprintf("unexpected token: %q (%s)", token.Value, token.Type)}
 	}
 }
