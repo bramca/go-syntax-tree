@@ -513,38 +513,51 @@ func TestPrattParser_Parse_Error(t *testing.T) {
 			}},
 			expectedErrorMsg: "failed to parse query: unexpected token \"(\" (OpenDelimiter) after \"conct\" (LeftOperand)",
 		},
+		"unmatched close delimiter returns error": {
+			tokenStream: &TokenStream{
+				Tokens: []Token{
+					{Value: "pow", Type: BinaryFunc},
+					{Value: "(", Type: OpenDelimiter},
+					{Value: "1", Type: Operand},
+					{Value: ",", Type: BinaryFuncSeparator},
+					{Value: "2", Type: Operand},
+					{Value: ")", Type: CloseDelimiter},
+					{Value: ")", Type: CloseDelimiter},
+					{Value: "*", Type: BinaryOperator},
+					{Value: "3", Type: Operand},
+				},
+			},
+			expectedErrorMsg: "failed to parse query: unexpected \")\" without matching \"(\"",
+		},
+		"function separator outside function": {
+			tokenStream: &TokenStream{
+				Tokens: []Token{
+					{Value: "pow", Type: BinaryFunc},
+					{Value: "(", Type: OpenDelimiter},
+					{Value: "1", Type: Operand},
+					{Value: ",", Type: BinaryFuncSeparator},
+					{Value: "2", Type: Operand},
+					{Value: ")", Type: CloseDelimiter},
+					{Value: "*", Type: BinaryOperator},
+					{Value: "3", Type: Operand},
+					{Value: ",", Type: BinaryFuncSeparator},
+					{Value: "2", Type: Operand},
+				},
+			},
+			expectedErrorMsg: "failed to parse query: unexpected \",\" outside of function call",
+		},
 	}
 
 	for name, tc := range tests {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
-			parser := PrattParser{Precendence: map[string]int{}}
+			parser := PrattParser{Precendence: map[string]int{"+": 1, "*": 2}}
 			_, _, err := parser.Parse(tc.tokenStream, 0, nil)
 
 			Error(t, err)
 			Equal(t, err.Error(), tc.expectedErrorMsg)
 		})
 	}
-}
-
-func TestPrattParser_Parse_CloseDelimiterStopsParsing(t *testing.T) {
-	t.Parallel()
-	tokenStream := &TokenStream{
-		Tokens: []Token{
-			{Value: "1", Type: Operand},
-			{Value: "+", Type: BinaryOperator},
-			{Value: "2", Type: Operand},
-			{Value: ")", Type: CloseDelimiter},
-			{Value: "*", Type: BinaryOperator},
-			{Value: "3", Type: Operand},
-		},
-	}
-	parser := PrattParser{Precendence: map[string]int{"+": 1, "*": 2}}
-	root, _, err := parser.Parse(tokenStream, 0, nil)
-
-	NoError(t, err)
-	Equal(t, root.Value, "+")
-	Equal(t, root.RightChild.Value, "2")
 }
 
 func TestPrattParser_Parse_EOFStopsParsing(t *testing.T) {

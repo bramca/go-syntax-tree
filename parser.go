@@ -10,11 +10,11 @@ type PrattParser struct {
 
 func (p PrattParser) Parse(tokenStream *TokenStream, minPrecedence int, nodes []*Node) (*Node, []*Node, error) {
 	nodeId := 0
-	return p.parse(tokenStream, minPrecedence, &nodeId, nodes)
+	return p.parse(tokenStream, minPrecedence, &nodeId, nodes, 0)
 }
 
-func (p PrattParser) parse(tokenStream *TokenStream, minPrecedence int, nodeId *int, nodes []*Node) (*Node, []*Node, error) {
-	lhs, newNodes, err := p.parsePrefix(tokenStream, nodeId, nodes)
+func (p PrattParser) parse(tokenStream *TokenStream, minPrecedence int, nodeId *int, nodes []*Node, groupDepth int) (*Node, []*Node, error) {
+	lhs, newNodes, err := p.parsePrefix(tokenStream, nodeId, nodes, groupDepth)
 	nodes = append(newNodes, lhs)
 	if err != nil {
 		return nil, nil, err
@@ -39,7 +39,7 @@ func (p PrattParser) parse(tokenStream *TokenStream, minPrecedence int, nodeId *
 
 			tokenStream.Next()
 
-			rhs, newNodes, err := p.parse(tokenStream, prec+1, nodeId, nodes)
+			rhs, newNodes, err := p.parse(tokenStream, prec+1, nodeId, nodes, groupDepth)
 			if err != nil {
 				return nil, nil, err
 			}
@@ -66,7 +66,16 @@ func (p PrattParser) parse(tokenStream *TokenStream, minPrecedence int, nodeId *
 
 			lhs = opNode
 
-		case CloseDelimiter, BinaryFuncSeparator:
+		case CloseDelimiter:
+			if groupDepth == 0 {
+				return nil, nil, &ParseError{Msg: fmt.Sprintf("unexpected %q without matching %q", op.Value, "(")}
+			}
+			return lhs, nodes, nil
+
+		case BinaryFuncSeparator:
+			if groupDepth == 0 {
+				return nil, nil, &ParseError{Msg: fmt.Sprintf("unexpected %q outside of function call", op.Value)}
+			}
 			return lhs, nodes, nil
 
 		default:
@@ -77,7 +86,7 @@ func (p PrattParser) parse(tokenStream *TokenStream, minPrecedence int, nodeId *
 	return lhs, nodes, nil
 }
 
-func (p PrattParser) parsePrefix(tokenStream *TokenStream, nodeId *int, nodes []*Node) (*Node, []*Node, error) {
+func (p PrattParser) parsePrefix(tokenStream *TokenStream, nodeId *int, nodes []*Node, groupDepth int) (*Node, []*Node, error) {
 	token := tokenStream.Next()
 
 	switch token.Type {
@@ -91,7 +100,7 @@ func (p PrattParser) parsePrefix(tokenStream *TokenStream, nodeId *int, nodes []
 		return node, nodes, nil
 
 	case OpenDelimiter:
-		inner, newNodes, err := p.parse(tokenStream, 0, nodeId, nodes)
+		inner, newNodes, err := p.parse(tokenStream, 0, nodeId, nodes, groupDepth+1)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -111,7 +120,7 @@ func (p PrattParser) parsePrefix(tokenStream *TokenStream, nodeId *int, nodes []
 			return nil, nil, &ParseError{Msg: fmt.Sprintf("expected '(' after binary function %s, got %q", token.Value, openDelim.Value)}
 		}
 
-		arg1, newNodes, err := p.parse(tokenStream, 0, nodeId, nodes)
+		arg1, newNodes, err := p.parse(tokenStream, 0, nodeId, nodes, groupDepth+1)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -122,7 +131,7 @@ func (p PrattParser) parsePrefix(tokenStream *TokenStream, nodeId *int, nodes []
 			return nil, nil, &ParseError{Msg: fmt.Sprintf("expected ',' in binary function %s, got %q", token.Value, separator.Value)}
 		}
 
-		arg2, newNodes, err := p.parse(tokenStream, 0, nodeId, nodes)
+		arg2, newNodes, err := p.parse(tokenStream, 0, nodeId, nodes, groupDepth+1)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -158,7 +167,7 @@ func (p PrattParser) parsePrefix(tokenStream *TokenStream, nodeId *int, nodes []
 			return nil, nil, &ParseError{Msg: fmt.Sprintf("expected '(' after unary function %s, got %q", token.Value, openDelim.Value)}
 		}
 
-		arg, newNodes, err := p.parse(tokenStream, 0, nodeId, nodes)
+		arg, newNodes, err := p.parse(tokenStream, 0, nodeId, nodes, groupDepth+1)
 		if err != nil {
 			return nil, nil, err
 		}
@@ -184,7 +193,7 @@ func (p PrattParser) parsePrefix(tokenStream *TokenStream, nodeId *int, nodes []
 		return funcNode, nodes, nil
 
 	case UnaryOperator:
-		operand, newNodes, err := p.parse(tokenStream, 100, nodeId, nodes)
+		operand, newNodes, err := p.parse(tokenStream, 100, nodeId, nodes, groupDepth)
 		if err != nil {
 			return nil, nil, err
 		}
