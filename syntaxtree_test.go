@@ -51,6 +51,19 @@ func TestBuildTree_ReturnsError(t *testing.T) {
 		query            string
 		expectedErrorMsg string
 	}{
+		"example missing lexer": {
+			syntaxTree:       SyntaxTree{},
+			query:            "(1+2)*3",
+			expectedErrorMsg: "failed to parse query: no lexer defined, cannot tokenize the query",
+		},
+		"example empty query": {
+			syntaxTree: SyntaxTree{
+				Lexer:       mathLexer,
+				Precendence: mathPrecedence,
+			},
+			query:            "",
+			expectedErrorMsg: "failed to parse query: unexpected token: \"\" (Unknown)",
+		},
 		"example missing opening bracket": {
 			syntaxTree: SyntaxTree{
 				Lexer:       mathLexer,

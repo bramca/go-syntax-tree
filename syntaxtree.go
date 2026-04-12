@@ -37,8 +37,7 @@ func (e NodeType) String() string {
 
 // SyntaxTree
 // Construct a syntax tree based on a defined syntax containing of simple
-// Operators, Binary Functions and Unary Functions with there mutual precedence
-// The construction of the tree will also take into account grouping using brackets '()' in the precedence
+// Binary Operators, Unary Operators, Binary Functions and Unary Functions with there mutual precedence.
 type SyntaxTree struct {
 	// Root node of the tree
 	Root *Node
@@ -46,26 +45,36 @@ type SyntaxTree struct {
 	// List of all nodes of the tree
 	Nodes []*Node
 
+	// deprecated
 	// Precedence of the operators and functions in the syntax
 	// Operators with a lower index in this array have a higher precedence over operators with a lower index
 	OperatorPrecedence []string
 
+	// deprecated
 	// Define the patterns of the syntax operators
 	OperatorParsers []OperatorParser
 
+	// deprecated
 	// Define the format of the syntax binary functions
 	BinaryFunctionParsers []BinaryFunctionParser
 
+	// deprecated
 	// Define the format of the syntax unary functions
 	UnaryFunctionParsers []UnaryFunctionParser
 
+	// deprecated
 	// Define a separator that can be used to separate the operators and operands during parsing
 	// This is a string that cannot exist in the query character space
 	Separator string
 
-	// Pratt parser changes
+	// Define a Lexer that contains:
+	//   - Binary / Unary operators
+	//   - Binary / Unary functions
 	Lexer *Lexer
 
+	// Define a precedence mapping for the binary operators
+	// A higher number means higher precedence
+	// Equal numbers translate into left associative parsing
 	Precendence map[string]int
 }
 
@@ -98,6 +107,11 @@ type Node struct {
 }
 
 func (t *SyntaxTree) BuildTree(query string) error {
+	if t.Lexer == nil {
+		return &ParseError{
+			Msg: "no lexer defined, cannot tokenize the query",
+		}
+	}
 	tokenStream := t.Lexer.Tokenize(query)
 
 	parser := PrattParser{
@@ -480,6 +494,10 @@ func createTree(t *SyntaxTree, parsedQuery string, startId int) (*Node, int) {
 }
 
 func (t SyntaxTree) String() string {
+	if t.Root == nil {
+		return ""
+	}
+
 	currentNode := t.Root
 	graphData := "graph {\n"
 	nodesVisited := map[int]bool{}
