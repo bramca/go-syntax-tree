@@ -82,13 +82,28 @@ type Lexer struct {
 	BinaryFunctions []string
 	UnaryFunctions  []string
 
-	OpenDelimiter             byte
-	CloseDelimiter            byte
-	StringDelimiter           byte
+	// Opening delimiter for grouping or function calls
+	OpenDelimiter byte
+
+	// Closing delimiter for grouping or function calls
+	CloseDelimiter byte
+
+	// Character that defines the beginning and end of a String
+	StringDelimiter byte
+
+	// Character that defines how the operands of
+	// a binary function are separated
 	BinaryFunctionOpSeparator byte
-	TokenSeparator            byte
+
+	// Character that defines how the different tokens
+	// in the expression are separated
+	// Can be left empty if there is none
+	// (e.g. "1+2+3" -> no character that separates the tokens)
+	TokenSeparator byte
 }
 
+// Tokenize
+// turns an expression into a TokenStream -> Array of Tokens of the correct types
 func (l *Lexer) Tokenize(expression string) *TokenStream {
 	binaryOpIndices := map[int]string{}
 	binaryOpValidatePrefix := func(prefix byte) bool {

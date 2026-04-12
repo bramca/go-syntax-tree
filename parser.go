@@ -5,10 +5,15 @@ import (
 	"slices"
 )
 
+// PrattParser
+// uses the Pratt parsing algorithm to parse an expression
+// given a operator precedence mapping (higher number -> higher precedence)
 type PrattParser struct {
 	Precedence map[string]int
 }
 
+// Parse
+// parses an incoming token stream into a syntax graph
 func (p PrattParser) Parse(tokenStream *TokenStream, minPrecedence int, nodes []*Node) (*Node, []*Node, error) {
 	nodeId := 0
 	return p.parse(tokenStream, minPrecedence, &nodeId, nodes, 0)

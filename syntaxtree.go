@@ -45,44 +45,49 @@ type SyntaxTree struct {
 	// List of all nodes of the tree
 	Nodes []*Node
 
-	// deprecated
-	// Precedence of the operators and functions in the syntax
-	// Operators with a lower index in this array have a higher precedence over operators with a lower index
-	OperatorPrecedence []string
-
-	// deprecated
-	// Define the patterns of the syntax operators
-	OperatorParsers []OperatorParser
-
-	// deprecated
-	// Define the format of the syntax binary functions
-	BinaryFunctionParsers []BinaryFunctionParser
-
-	// deprecated
-	// Define the format of the syntax unary functions
-	UnaryFunctionParsers []UnaryFunctionParser
-
-	// deprecated
-	// Define a separator that can be used to separate the operators and operands during parsing
-	// This is a string that cannot exist in the query character space
-	Separator string
-
 	// Define a Lexer that contains:
 	//   - Binary / Unary operators
 	//   - Binary / Unary functions
+	//   - Grouping delimiters
+	//   - String delimiters
+	//   - Extra tokenization configuration
 	Lexer *Lexer
 
 	// Define a precedence mapping for the binary operators
 	// A higher number means higher precedence
 	// Equal numbers translate into left associative parsing
 	Precendence map[string]int
+
+	// WARNING: Deprecated
+	// Precedence of the operators and functions in the syntax
+	// Operators with a lower index in this array have a higher precedence over operators with a lower index
+	OperatorPrecedence []string
+
+	// WARNING: Deprecated
+	// Define the patterns of the syntax operators
+	OperatorParsers []OperatorParser
+
+	// WARNING: Deprecated
+	// Define the format of the syntax binary functions
+	BinaryFunctionParsers []BinaryFunctionParser
+
+	// WARNING: Deprecated
+	// Define the format of the syntax unary functions
+	UnaryFunctionParsers []UnaryFunctionParser
+
+	// WARNING: Deprecated
+	// Define a separator that can be used to separate the operators and operands during parsing
+	// This is a string that cannot exist in the query character space
+	Separator string
 }
 
+// WARNING: Deprecated
 type OperatorParser struct {
 	OperatorString  string
 	OperatorPattern *regexp.Regexp
 }
 
+// WARNING: Deprecated
 type BinaryFunctionParser struct {
 	FunctionName     string
 	OpeningDelimiter byte
@@ -90,6 +95,7 @@ type BinaryFunctionParser struct {
 	OperandSeparator byte
 }
 
+// WARNING: Deprecated
 type UnaryFunctionParser struct {
 	FunctionName     string
 	OpeningDelimiter byte
@@ -131,7 +137,7 @@ func (t *SyntaxTree) BuildTree(query string) error {
 	return nil
 }
 
-// deprecated
+// WARNING: Deprecated
 func (t *SyntaxTree) ConstructTree(query string) error {
 	parsedQuery, err := t.ParseQuery(query)
 	if err != nil {
@@ -143,7 +149,7 @@ func (t *SyntaxTree) ConstructTree(query string) error {
 	return nil
 }
 
-// deprecated
+// WARNING: Deprecated
 //
 //nolint:gocognit,gocyclo // complex function, no way around it
 func (t *SyntaxTree) ParseQuery(query string) (string, error) {
@@ -320,7 +326,7 @@ func (t *SyntaxTree) ParseQuery(query string) (string, error) {
 	return query, nil
 }
 
-// deprecated
+// WARNING: Deprecated
 //
 //nolint:gocognit,nestif,gocyclo,gocritic // complex function, no way around it
 func createTree(t *SyntaxTree, parsedQuery string, startId int) (*Node, int) {
