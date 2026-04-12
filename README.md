@@ -57,7 +57,7 @@ func main() {
 	err := mathTree.BuildTree("-1+pow(2+3*4,pow((-1+sqrt(3))*4,3))")
 	if err != nil {
 		fmt.Printf("err: %s\n", err)
-		os.Exit(2)
+		os.Exit(1)
 	}
 
 	sqlLexer := &syntaxtree.Lexer{
@@ -94,11 +94,11 @@ func main() {
 	err = sqlTree.BuildTree("name = 'ab12' OR price <= 10 AND price >= 5")
 	if err != nil {
 		fmt.Printf("err: %s\n", err)
-		os.Exit(2)
+		os.Exit(1)
 	}
 
-	fmt.Printf("Math Tree (dotfile format):\n%s", mathTree)
-	fmt.Printf("SQL Tree (dotfile format):\n%s", sqlTree)
+	fmt.Printf("Math Tree (dotfile format):\n%s\n", mathTree)
+	fmt.Printf("SQL Tree (dotfile format):\n%s\n", sqlTree)
 }
 
 ```
