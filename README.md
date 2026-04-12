@@ -105,7 +105,7 @@ func main() {
 
 will result in the following trees:
 
-| Math                                    | SQL                                   |
+| Math Tree                               | SQL Tree                              |
 |-----------------------------------------|---------------------------------------|
 | ![Math Syntax Tree](.img/math-tree.png) | ![SQL Syntax Tree](.img/sql-tree.png) |
 
