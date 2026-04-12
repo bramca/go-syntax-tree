@@ -465,7 +465,7 @@ func TestPrattParser_Parse_Error(t *testing.T) {
 					{Value: "1", Type: Operand},
 				},
 			},
-			expectedErrorMsg: "failed to parse query: expected ')' but got \"\"",
+			expectedErrorMsg: "failed to parse query: expected closing bracket but got \"\"",
 		},
 		"missing separator in binary function": {
 			tokenStream: &TokenStream{
@@ -476,7 +476,7 @@ func TestPrattParser_Parse_Error(t *testing.T) {
 					{Value: ")", Type: CloseDelimiter},
 				},
 			},
-			expectedErrorMsg: "failed to parse query: expected ',' in binary function pow, got \")\"",
+			expectedErrorMsg: "failed to parse query: expected operand separator in binary function pow, got \")\"",
 		},
 		"missing opening delimiter in binary function": {
 			tokenStream: &TokenStream{
@@ -488,7 +488,7 @@ func TestPrattParser_Parse_Error(t *testing.T) {
 					{Value: ")", Type: CloseDelimiter},
 				},
 			},
-			expectedErrorMsg: "failed to parse query: expected '(' after binary function pow, got \"2\"",
+			expectedErrorMsg: "failed to parse query: expected opening bracket after binary function pow, got \"2\"",
 		},
 		"missing closing delimiter in binary function": {
 			tokenStream: &TokenStream{
@@ -500,7 +500,7 @@ func TestPrattParser_Parse_Error(t *testing.T) {
 					{Value: "3", Type: Operand},
 				},
 			},
-			expectedErrorMsg: "failed to parse query: expected ')' after binary function pow, got \"\"",
+			expectedErrorMsg: "failed to parse query: expected closing bracket after binary function pow, got \"\"",
 		},
 		"missing opening delimiter in unary function": {
 			tokenStream: &TokenStream{
@@ -510,7 +510,7 @@ func TestPrattParser_Parse_Error(t *testing.T) {
 					{Value: ")", Type: CloseDelimiter},
 				},
 			},
-			expectedErrorMsg: "failed to parse query: expected '(' after unary function sqrt, got \"16\"",
+			expectedErrorMsg: "failed to parse query: expected opening bracket after unary function sqrt, got \"16\"",
 		},
 		"missing closing delimiter in unary function": {
 			tokenStream: &TokenStream{
@@ -520,7 +520,7 @@ func TestPrattParser_Parse_Error(t *testing.T) {
 					{Value: "16", Type: Operand},
 				},
 			},
-			expectedErrorMsg: "failed to parse query: expected ')' after unary function sqrt, got \"\"",
+			expectedErrorMsg: "failed to parse query: expected closing bracket after unary function sqrt, got \"\"",
 		},
 		"unknown operator in precedence table": {
 			tokenStream: &TokenStream{
@@ -559,7 +559,7 @@ func TestPrattParser_Parse_Error(t *testing.T) {
 					{Value: "3", Type: Operand},
 				},
 			},
-			expectedErrorMsg: "failed to parse query: unexpected \")\" without matching \"(\"",
+			expectedErrorMsg: "failed to parse query: unexpected \")\" without matching opening bracket",
 		},
 		"function separator outside function": {
 			tokenStream: &TokenStream{

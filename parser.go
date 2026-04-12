@@ -23,7 +23,7 @@ func (p PrattParser) parse(tokenStream *TokenStream, precedence int, nodeId *int
 
 	if tokenStream.Peek().Type == CloseDelimiter {
 		if groupDepth == 0 {
-			return nil, nil, &ParseError{Msg: fmt.Sprintf("unexpected %q without matching %q", tokenStream.Peek().Value, "(")}
+			return nil, nil, &ParseError{Msg: fmt.Sprintf("unexpected %q without matching opening bracket", tokenStream.Peek().Value)}
 		}
 
 		return lhs, nodes, nil
@@ -78,7 +78,7 @@ func (p PrattParser) parsePrefix(tokenStream *TokenStream, nodeId *int, nodes []
 
 		closeDelim := tokenStream.Next()
 		if closeDelim.Type != CloseDelimiter {
-			return nil, nil, &ParseError{Msg: fmt.Sprintf("expected ')' but got %q", closeDelim.Value)}
+			return nil, nil, &ParseError{Msg: fmt.Sprintf("expected closing bracket but got %q", closeDelim.Value)}
 		}
 
 		inner.IsGroup = true
@@ -87,7 +87,7 @@ func (p PrattParser) parsePrefix(tokenStream *TokenStream, nodeId *int, nodes []
 	case BinaryFunc:
 		openDelim := tokenStream.Next()
 		if openDelim.Type != OpenDelimiter {
-			return nil, nil, &ParseError{Msg: fmt.Sprintf("expected '(' after binary function %s, got %q", token.Value, openDelim.Value)}
+			return nil, nil, &ParseError{Msg: fmt.Sprintf("expected opening bracket after binary function %s, got %q", token.Value, openDelim.Value)}
 		}
 
 		arg1, newNodes, err := p.parse(tokenStream, 0, nodeId, nodes, groupDepth+1)
@@ -98,7 +98,7 @@ func (p PrattParser) parsePrefix(tokenStream *TokenStream, nodeId *int, nodes []
 
 		separator := tokenStream.Next()
 		if separator.Type != BinaryFuncSeparator {
-			return nil, nil, &ParseError{Msg: fmt.Sprintf("expected ',' in binary function %s, got %q", token.Value, separator.Value)}
+			return nil, nil, &ParseError{Msg: fmt.Sprintf("expected operand separator in binary function %s, got %q", token.Value, separator.Value)}
 		}
 
 		arg2, newNodes, err := p.parse(tokenStream, 0, nodeId, nodes, groupDepth+1)
@@ -109,7 +109,7 @@ func (p PrattParser) parsePrefix(tokenStream *TokenStream, nodeId *int, nodes []
 
 		closeDelim := tokenStream.Next()
 		if closeDelim.Type != CloseDelimiter {
-			return nil, nil, &ParseError{Msg: fmt.Sprintf("expected ')' after binary function %s, got %q", token.Value, closeDelim.Value)}
+			return nil, nil, &ParseError{Msg: fmt.Sprintf("expected closing bracket after binary function %s, got %q", token.Value, closeDelim.Value)}
 		}
 
 		funcNode := &Node{
@@ -134,7 +134,7 @@ func (p PrattParser) parsePrefix(tokenStream *TokenStream, nodeId *int, nodes []
 	case UnaryFunc:
 		openDelim := tokenStream.Next()
 		if openDelim.Type != OpenDelimiter {
-			return nil, nil, &ParseError{Msg: fmt.Sprintf("expected '(' after unary function %s, got %q", token.Value, openDelim.Value)}
+			return nil, nil, &ParseError{Msg: fmt.Sprintf("expected opening bracket after unary function %s, got %q", token.Value, openDelim.Value)}
 		}
 
 		arg, newNodes, err := p.parse(tokenStream, 0, nodeId, nodes, groupDepth+1)
@@ -145,7 +145,7 @@ func (p PrattParser) parsePrefix(tokenStream *TokenStream, nodeId *int, nodes []
 
 		closeDelim := tokenStream.Next()
 		if closeDelim.Type != CloseDelimiter {
-			return nil, nil, &ParseError{Msg: fmt.Sprintf("expected ')' after unary function %s, got %q", token.Value, closeDelim.Value)}
+			return nil, nil, &ParseError{Msg: fmt.Sprintf("expected closing bracket after unary function %s, got %q", token.Value, closeDelim.Value)}
 		}
 
 		funcNode := &Node{
@@ -221,7 +221,7 @@ func (p PrattParser) parseInfix(tokenStream *TokenStream, lhs *Node, op Token, n
 		return lhs, nodes, nil
 	case CloseDelimiter:
 		if groupDepth == 0 {
-			return nil, nil, &ParseError{Msg: fmt.Sprintf("unexpected %q without matching %q", tokenStream.Peek().Value, "(")}
+			return nil, nil, &ParseError{Msg: fmt.Sprintf("unexpected %q without matching opening bracket", tokenStream.Peek().Value)}
 		}
 
 		return lhs, nodes, nil

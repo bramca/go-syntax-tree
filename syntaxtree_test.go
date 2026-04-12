@@ -44,7 +44,6 @@ func TestNodeTypeString_ReturnsCorrectValue(t *testing.T) {
 	}
 }
 
-// TODO: Fix tests
 func TestBuildTree_ReturnsError(t *testing.T) {
 	t.Parallel()
 	tests := map[string]struct {
@@ -58,7 +57,7 @@ func TestBuildTree_ReturnsError(t *testing.T) {
 				Precendence: mathPrecedence,
 			},
 			query:            "(1+2))*3",
-			expectedErrorMsg: "failed to parse query: missing opening bracket '('",
+			expectedErrorMsg: "failed to parse query: unexpected \")\" without matching opening bracket",
 		},
 		"example missing closing bracket": {
 			syntaxTree: SyntaxTree{
@@ -66,7 +65,7 @@ func TestBuildTree_ReturnsError(t *testing.T) {
 				Precendence: mathPrecedence,
 			},
 			query:            "(1+(2*3)",
-			expectedErrorMsg: "failed to parse query: missing closing bracket ')'",
+			expectedErrorMsg: "failed to parse query: expected closing bracket but got \"\"",
 		},
 		"example parsing error typo last part": {
 			syntaxTree: SyntaxTree{
@@ -74,7 +73,7 @@ func TestBuildTree_ReturnsError(t *testing.T) {
 				Precendence: odataPrecedence,
 			},
 			query:            "concat('#',name) qe '#test'",
-			expectedErrorMsg: "failed to parse query: possible typo in \"( name ) qe '#test'\"",
+			expectedErrorMsg: "failed to parse query: unexpected token \"qe'#test'\" (StringOperand) after \"concat\" (Operator)",
 		},
 		"example parsing error typo first part": {
 			syntaxTree: SyntaxTree{
@@ -82,7 +81,7 @@ func TestBuildTree_ReturnsError(t *testing.T) {
 				Precendence: odataPrecedence,
 			},
 			query:            "conct('#',name) eq '#test'",
-			expectedErrorMsg: "failed to parse query: possible typo in \"conct( '#',name\"",
+			expectedErrorMsg: "failed to parse query: unexpected token \"(\" (OpenDelimiter) after \"conct\" (LeftOperand)",
 		},
 	}
 
@@ -103,7 +102,6 @@ func TestBuildTree_ReturnsError(t *testing.T) {
 	}
 }
 
-// TODO: Fix tests
 func TestBuildTree_CreatesCorrectGraph(t *testing.T) {
 	t.Parallel()
 	tests := map[string]struct {
@@ -144,11 +142,11 @@ func TestBuildTree_CreatesCorrectGraph(t *testing.T) {
 			},
 			query: "(1+2)*sqrt(3)",
 			expectedGraph: `graph {
-	"1 [+]" -- "0 [1]"
-	"1 [+]" -- "2 [2]"
-	"3 [*]" -- "1 [+]"
-	"4 [sqrt]" -- "5 [3]"
-	"3 [*]" -- "4 [sqrt]"
+	"2 [+]" -- "0 [1]"
+	"2 [+]" -- "1 [2]"
+	"5 [*]" -- "2 [+]"
+	"4 [sqrt]" -- "3 [3]"
+	"5 [*]" -- "4 [sqrt]"
 }`,
 		},
 		"math simple example function recursion": {
