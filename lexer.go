@@ -156,7 +156,8 @@ func (l *Lexer) Tokenize(expression string) *TokenStream {
 	unaryFuncIndices := map[int]string{}
 	unaryFuncValidatePrefix := func(prefix byte) bool {
 		return (l.OpenDelimiter == byte(0) || prefix == l.OpenDelimiter) ||
-			(l.TokenSeparator == byte(0) || prefix == l.TokenSeparator)
+			(l.TokenSeparator == byte(0) || prefix == l.TokenSeparator) ||
+			(l.BinaryFunctionOpSeparator == byte(0) || prefix == l.BinaryFunctionOpSeparator)
 	}
 	unaryFunxValidateSuffix := func(suffix byte) bool {
 		return l.OpenDelimiter == byte(0) || suffix == l.OpenDelimiter

@@ -270,6 +270,32 @@ func TestBuildTree_CreatesCorrectGraph(t *testing.T) {
 	"23 [and]" -- "22 [or]"
 }`,
 		},
+		"odata complex example 2": {
+			syntaxTree: SyntaxTree{
+				Lexer:       odataLexer,
+				Precendence: odataPrecedence,
+			},
+			query: "not(contains(tolower(testValue),' ') and endswith(metadata/name,'prd')) and not(name eq 'test' or startswith(name,'prd'))",
+			expectedGraph: `graph {
+	"1 [tolower]" -- "0 [testValue]"
+	"3 [contains]" -- "1 [tolower]"
+	"3 [contains]" -- "2 [' ']"
+	"7 [and]" -- "3 [contains]"
+	"6 [endswith]" -- "4 [metadata/name]"
+	"6 [endswith]" -- "5 ['prd']"
+	"7 [and]" -- "6 [endswith]"
+	"8 [not]" -- "7 [and]"
+	"17 [and]" -- "8 [not]"
+	"11 [eq]" -- "9 [name]"
+	"11 [eq]" -- "10 ['test']"
+	"15 [or]" -- "11 [eq]"
+	"14 [startswith]" -- "12 [name]"
+	"14 [startswith]" -- "13 ['prd']"
+	"15 [or]" -- "14 [startswith]"
+	"16 [not]" -- "15 [or]"
+	"17 [and]" -- "16 [not]"
+}`,
+		},
 	}
 
 	for name, testData := range tests {

@@ -46,6 +46,7 @@ var (
 			"startswith",
 		},
 		UnaryFunctions: []string{
+			"not",
 			"length",
 			"indexof",
 			"tolower",
