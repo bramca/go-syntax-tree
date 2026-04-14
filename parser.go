@@ -127,10 +127,10 @@ func (p PrattParser) parsePrefix(tokenStream *TokenStream, nodeId *int, nodes []
 		(*nodeId)++
 		arg1.Parent = funcNode
 		arg2.Parent = funcNode
-		if arg1.Type != Operator && arg1.Type != UnaryFunction {
+		if arg1.Type != Operator && arg1.Type != UnaryOperator {
 			arg1.Type = LeftOperand
 		}
-		if arg2.Type != Operator && arg2.Type != UnaryFunction {
+		if arg2.Type != Operator && arg2.Type != UnaryOperator {
 			arg2.Type = RightOperand
 		}
 
@@ -156,18 +156,18 @@ func (p PrattParser) parsePrefix(tokenStream *TokenStream, nodeId *int, nodes []
 		funcNode := &Node{
 			Id:        *nodeId,
 			Value:     token.Value,
-			Type:      UnaryFunction,
+			Type:      UnaryOperator,
 			LeftChild: arg,
 		}
 		(*nodeId)++
 		arg.Parent = funcNode
-		if arg.Type != UnaryFunction && arg.Type != Operator {
+		if arg.Type != UnaryOperator && arg.Type != Operator {
 			arg.Type = LeftOperand
 		}
 
 		return funcNode, nodes, nil
 
-	case UnaryOperator:
+	case UnaryOp:
 		operand, newNodes, err := p.parse(tokenStream, 100, nodeId, nodes, groupDepth)
 		if err != nil {
 			return nil, nil, err
@@ -177,7 +177,7 @@ func (p PrattParser) parsePrefix(tokenStream *TokenStream, nodeId *int, nodes []
 		opNode := &Node{
 			Id:        *nodeId,
 			Value:     token.Value,
-			Type:      UnaryFunction,
+			Type:      UnaryOperator,
 			LeftChild: operand,
 		}
 		(*nodeId)++
@@ -193,7 +193,7 @@ func (p PrattParser) parsePrefix(tokenStream *TokenStream, nodeId *int, nodes []
 
 func (p PrattParser) parseInfix(tokenStream *TokenStream, lhs *Node, op Token, nodeId *int, nodes []*Node, precedence int, groupDepth int) (*Node, []*Node, error) {
 	switch op.Type {
-	case BinaryOperator:
+	case BinaryOp:
 		tokenStream.Next()
 
 		rhs, newNodes, err := p.parse(tokenStream, precedence+1, nodeId, nodes, groupDepth)
@@ -212,10 +212,10 @@ func (p PrattParser) parseInfix(tokenStream *TokenStream, lhs *Node, op Token, n
 		(*nodeId)++
 		lhs.Parent = opNode
 		rhs.Parent = opNode
-		if lhs.Type != Operator && lhs.Type != UnaryFunction {
+		if lhs.Type != Operator && lhs.Type != UnaryOperator {
 			lhs.Type = LeftOperand
 		}
-		if rhs.Type != Operator && rhs.Type != UnaryFunction {
+		if rhs.Type != Operator && rhs.Type != UnaryOperator {
 			rhs.Type = RightOperand
 		}
 
@@ -247,7 +247,7 @@ func (p PrattParser) validOpType(op Token) bool {
 }
 
 func (p PrattParser) getPrecedence(token Token) (int, error) {
-	if token.Type == BinaryOperator {
+	if token.Type == BinaryOp {
 		if prec, ok := p.Precedence[token.Value]; !ok {
 			return 0, &ParseError{Msg: fmt.Sprintf("token %q not in precedence table", token.Value)}
 		} else {

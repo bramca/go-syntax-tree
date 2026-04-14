@@ -65,7 +65,7 @@ func TestPrattParser_Parse_BinaryOperator(t *testing.T) {
 			tokenStream: &TokenStream{
 				Tokens: []Token{
 					{Value: "1", Type: Operand},
-					{Value: "+", Type: BinaryOperator},
+					{Value: "+", Type: BinaryOp},
 					{Value: "2", Type: Operand},
 				},
 			},
@@ -79,7 +79,7 @@ func TestPrattParser_Parse_BinaryOperator(t *testing.T) {
 			tokenStream: &TokenStream{
 				Tokens: []Token{
 					{Value: "3", Type: Operand},
-					{Value: "*", Type: BinaryOperator},
+					{Value: "*", Type: BinaryOp},
 					{Value: "4", Type: Operand},
 				},
 			},
@@ -119,9 +119,9 @@ func TestPrattParser_Parse_Precedence(t *testing.T) {
 			tokenStream: &TokenStream{
 				Tokens: []Token{
 					{Value: "1", Type: Operand},
-					{Value: "+", Type: BinaryOperator},
+					{Value: "+", Type: BinaryOp},
 					{Value: "2", Type: Operand},
-					{Value: "*", Type: BinaryOperator},
+					{Value: "*", Type: BinaryOp},
 					{Value: "3", Type: Operand},
 				},
 			},
@@ -133,9 +133,9 @@ func TestPrattParser_Parse_Precedence(t *testing.T) {
 			tokenStream: &TokenStream{
 				Tokens: []Token{
 					{Value: "1", Type: Operand},
-					{Value: "+", Type: BinaryOperator},
+					{Value: "+", Type: BinaryOp},
 					{Value: "2", Type: Operand},
-					{Value: "*", Type: BinaryOperator},
+					{Value: "*", Type: BinaryOp},
 					{Value: "3", Type: Operand},
 				},
 			},
@@ -147,9 +147,9 @@ func TestPrattParser_Parse_Precedence(t *testing.T) {
 			tokenStream: &TokenStream{
 				Tokens: []Token{
 					{Value: "1", Type: Operand},
-					{Value: "+", Type: BinaryOperator},
+					{Value: "+", Type: BinaryOp},
 					{Value: "2", Type: Operand},
-					{Value: "*", Type: BinaryOperator},
+					{Value: "*", Type: BinaryOp},
 					{Value: "3", Type: Operand},
 				},
 			},
@@ -188,9 +188,9 @@ func TestPrattParser_Parse_LeftToRightAssociativity(t *testing.T) {
 			tokenStream: &TokenStream{
 				Tokens: []Token{
 					{Value: "1", Type: Operand},
-					{Value: "-", Type: BinaryOperator},
+					{Value: "-", Type: BinaryOp},
 					{Value: "2", Type: Operand},
-					{Value: "-", Type: BinaryOperator},
+					{Value: "-", Type: BinaryOp},
 					{Value: "3", Type: Operand},
 				},
 			},
@@ -204,9 +204,9 @@ func TestPrattParser_Parse_LeftToRightAssociativity(t *testing.T) {
 			tokenStream: &TokenStream{
 				Tokens: []Token{
 					{Value: "1", Type: Operand},
-					{Value: "+", Type: BinaryOperator},
+					{Value: "+", Type: BinaryOp},
 					{Value: "2", Type: Operand},
-					{Value: "+", Type: BinaryOperator},
+					{Value: "+", Type: BinaryOp},
 					{Value: "3", Type: Operand},
 				},
 			},
@@ -220,9 +220,9 @@ func TestPrattParser_Parse_LeftToRightAssociativity(t *testing.T) {
 			tokenStream: &TokenStream{
 				Tokens: []Token{
 					{Value: "1", Type: Operand},
-					{Value: "*", Type: BinaryOperator},
+					{Value: "*", Type: BinaryOp},
 					{Value: "2", Type: Operand},
-					{Value: "*", Type: BinaryOperator},
+					{Value: "*", Type: BinaryOp},
 					{Value: "3", Type: Operand},
 				},
 			},
@@ -236,9 +236,9 @@ func TestPrattParser_Parse_LeftToRightAssociativity(t *testing.T) {
 			tokenStream: &TokenStream{
 				Tokens: []Token{
 					{Value: "1", Type: Operand},
-					{Value: "/", Type: BinaryOperator},
+					{Value: "/", Type: BinaryOp},
 					{Value: "2", Type: Operand},
-					{Value: "/", Type: BinaryOperator},
+					{Value: "/", Type: BinaryOp},
 					{Value: "3", Type: Operand},
 				},
 			},
@@ -280,10 +280,10 @@ func TestPrattParser_Parse_Grouping(t *testing.T) {
 				Tokens: []Token{
 					{Value: "(", Type: OpenDelimiter},
 					{Value: "1", Type: Operand},
-					{Value: "+", Type: BinaryOperator},
+					{Value: "+", Type: BinaryOp},
 					{Value: "2", Type: Operand},
 					{Value: ")", Type: CloseDelimiter},
-					{Value: "*", Type: BinaryOperator},
+					{Value: "*", Type: BinaryOp},
 					{Value: "3", Type: Operand},
 				},
 			},
@@ -393,7 +393,7 @@ func TestPrattParser_Parse_UnaryFunction(t *testing.T) {
 
 			NoError(t, err)
 			Equal(t, root.Value, tc.expectedRootValue)
-			Equal(t, root.Type, UnaryFunction)
+			Equal(t, root.Type, UnaryOperator)
 			Equal(t, root.LeftChild.Value, tc.expectedChildValue)
 		})
 	}
@@ -409,7 +409,7 @@ func TestPrattParser_Parse_UnaryOperator(t *testing.T) {
 		"negative number": {
 			tokenStream: &TokenStream{
 				Tokens: []Token{
-					{Value: "-", Type: UnaryOperator},
+					{Value: "-", Type: UnaryOp},
 					{Value: "5", Type: Operand},
 				},
 			},
@@ -419,9 +419,9 @@ func TestPrattParser_Parse_UnaryOperator(t *testing.T) {
 		"unary operator in expression": {
 			tokenStream: &TokenStream{
 				Tokens: []Token{
-					{Value: "-", Type: UnaryOperator},
+					{Value: "-", Type: UnaryOp},
 					{Value: "5", Type: Operand},
-					{Value: "+", Type: BinaryOperator},
+					{Value: "+", Type: BinaryOp},
 					{Value: "3", Type: Operand},
 				},
 			},
@@ -526,7 +526,7 @@ func TestPrattParser_Parse_Error(t *testing.T) {
 			tokenStream: &TokenStream{
 				Tokens: []Token{
 					{Value: "1", Type: Operand},
-					{Value: "?", Type: BinaryOperator},
+					{Value: "?", Type: BinaryOp},
 					{Value: "2", Type: Operand},
 				},
 			},
@@ -540,7 +540,7 @@ func TestPrattParser_Parse_Error(t *testing.T) {
 				{Value: ",", Type: BinaryFuncSeparator},
 				{Value: "name", Type: Operand},
 				{Value: ")", Type: CloseDelimiter},
-				{Value: "eq", Type: BinaryOperator},
+				{Value: "eq", Type: BinaryOp},
 				{Value: "'#test'", Type: StringOperand},
 			}},
 			expectedErrorMsg: "failed to parse query: unexpected token \"(\" (OpenDelimiter) after \"conct\" (LeftOperand)",
@@ -555,7 +555,7 @@ func TestPrattParser_Parse_Error(t *testing.T) {
 					{Value: "2", Type: Operand},
 					{Value: ")", Type: CloseDelimiter},
 					{Value: ")", Type: CloseDelimiter},
-					{Value: "*", Type: BinaryOperator},
+					{Value: "*", Type: BinaryOp},
 					{Value: "3", Type: Operand},
 				},
 			},
@@ -570,7 +570,7 @@ func TestPrattParser_Parse_Error(t *testing.T) {
 					{Value: ",", Type: BinaryFuncSeparator},
 					{Value: "2", Type: Operand},
 					{Value: ")", Type: CloseDelimiter},
-					{Value: "*", Type: BinaryOperator},
+					{Value: "*", Type: BinaryOp},
 					{Value: "3", Type: Operand},
 					{Value: ",", Type: BinaryFuncSeparator},
 					{Value: "2", Type: Operand},
@@ -614,9 +614,9 @@ func TestPrattParser_Parse_NodeIdsAreSequential(t *testing.T) {
 	tokenStream := &TokenStream{
 		Tokens: []Token{
 			{Value: "1", Type: Operand},
-			{Value: "+", Type: BinaryOperator},
+			{Value: "+", Type: BinaryOp},
 			{Value: "2", Type: Operand},
-			{Value: "*", Type: BinaryOperator},
+			{Value: "*", Type: BinaryOp},
 			{Value: "3", Type: Operand},
 		},
 	}
@@ -640,9 +640,9 @@ func TestPrattParser_Parse_ParentChildRelationships(t *testing.T) {
 	tokenStream := &TokenStream{
 		Tokens: []Token{
 			{Value: "1", Type: Operand},
-			{Value: "+", Type: BinaryOperator},
+			{Value: "+", Type: BinaryOp},
 			{Value: "2", Type: Operand},
-			{Value: "*", Type: BinaryOperator},
+			{Value: "*", Type: BinaryOp},
 			{Value: "3", Type: Operand},
 		},
 	}
@@ -662,12 +662,12 @@ func TestPrattParser_Parse_ComplexNestedExpression(t *testing.T) {
 	tokenStream := &TokenStream{
 		Tokens: []Token{
 			{Value: "1", Type: Operand},
-			{Value: "+", Type: BinaryOperator},
+			{Value: "+", Type: BinaryOp},
 			{Value: "sqrt", Type: UnaryFunc},
 			{Value: "(", Type: OpenDelimiter},
 			{Value: "4", Type: Operand},
 			{Value: ")", Type: CloseDelimiter},
-			{Value: "*", Type: BinaryOperator},
+			{Value: "*", Type: BinaryOp},
 			{Value: "pow", Type: BinaryFunc},
 			{Value: "(", Type: OpenDelimiter},
 			{Value: "2", Type: Operand},
@@ -684,7 +684,7 @@ func TestPrattParser_Parse_ComplexNestedExpression(t *testing.T) {
 	Equal(t, root.LeftChild.Value, "1")
 	Equal(t, root.RightChild.Value, "*")
 	Equal(t, root.RightChild.LeftChild.Value, "sqrt")
-	Equal(t, root.RightChild.LeftChild.Type, UnaryFunction)
+	Equal(t, root.RightChild.LeftChild.Type, UnaryOperator)
 	Equal(t, root.RightChild.RightChild.Value, "pow")
 	Equal(t, root.RightChild.RightChild.Type, Operator)
 }
@@ -699,7 +699,7 @@ func TestPrattParser_Parse_BinaryFunctionWithOperator(t *testing.T) {
 			{Value: ",", Type: BinaryFuncSeparator},
 			{Value: "3", Type: Operand},
 			{Value: ")", Type: CloseDelimiter},
-			{Value: "+", Type: BinaryOperator},
+			{Value: "+", Type: BinaryOp},
 			{Value: "1", Type: Operand},
 		},
 	}
@@ -724,10 +724,10 @@ func TestPrattParser_Parse_BinaryFunctionInGroup(t *testing.T) {
 			{Value: ",", Type: BinaryFuncSeparator},
 			{Value: "3", Type: Operand},
 			{Value: ")", Type: CloseDelimiter},
-			{Value: "+", Type: BinaryOperator},
+			{Value: "+", Type: BinaryOp},
 			{Value: "1", Type: Operand},
 			{Value: ")", Type: CloseDelimiter},
-			{Value: "*", Type: BinaryOperator},
+			{Value: "*", Type: BinaryOp},
 			{Value: "2", Type: Operand},
 		},
 	}

@@ -23,11 +23,11 @@ func TestLexer_TokenType_CorrectString(t *testing.T) {
 			expectedResult: "StringOperand",
 		},
 		"binaryOperator": {
-			tokenType:      BinaryOperator,
+			tokenType:      BinaryOp,
 			expectedResult: "BinaryOperator",
 		},
 		"unaryOperator": {
-			tokenType:      UnaryOperator,
+			tokenType:      UnaryOp,
 			expectedResult: "UnaryOperator",
 		},
 		"binaryFunc": {
@@ -105,7 +105,7 @@ func TestLexer_TokenStreamNext_ReturnsCorrectToken(t *testing.T) {
 					},
 					{
 						Value: "+",
-						Type:  BinaryOperator,
+						Type:  BinaryOp,
 					},
 					{
 						Value: "2",
@@ -120,7 +120,7 @@ func TestLexer_TokenStreamNext_ReturnsCorrectToken(t *testing.T) {
 			expectedTokensLeft: []Token{
 				{
 					Value: "+",
-					Type:  BinaryOperator,
+					Type:  BinaryOp,
 				},
 				{
 					Value: "2",
@@ -193,7 +193,7 @@ func TestLexer_TokenStreamPeek_ReturnsCorrectToken(t *testing.T) {
 					},
 					{
 						Value: "+",
-						Type:  BinaryOperator,
+						Type:  BinaryOp,
 					},
 					{
 						Value: "2",
@@ -212,7 +212,7 @@ func TestLexer_TokenStreamPeek_ReturnsCorrectToken(t *testing.T) {
 				},
 				{
 					Value: "+",
-					Type:  BinaryOperator,
+					Type:  BinaryOp,
 				},
 				{
 					Value: "2",
@@ -251,9 +251,9 @@ func TestLexer_Tokenize_ReturnCorrectTokens(t *testing.T) {
 			lexer: mathLexer,
 			expectedTokens: []Token{
 				{Value: "1", Type: Operand},
-				{Value: "+", Type: BinaryOperator},
+				{Value: "+", Type: BinaryOp},
 				{Value: "2", Type: Operand},
-				{Value: "*", Type: BinaryOperator},
+				{Value: "*", Type: BinaryOp},
 				{Value: "3", Type: Operand},
 			},
 		},
@@ -261,29 +261,29 @@ func TestLexer_Tokenize_ReturnCorrectTokens(t *testing.T) {
 			query: "-1+pow(2+3*4,pow((-1+sqrt(3))*4,3))",
 			lexer: mathLexer,
 			expectedTokens: []Token{
-				{Value: "-", Type: UnaryOperator},
+				{Value: "-", Type: UnaryOp},
 				{Value: "1", Type: Operand},
-				{Value: "+", Type: BinaryOperator},
+				{Value: "+", Type: BinaryOp},
 				{Value: "pow", Type: BinaryFunc},
 				{Value: "(", Type: OpenDelimiter},
 				{Value: "2", Type: Operand},
-				{Value: "+", Type: BinaryOperator},
+				{Value: "+", Type: BinaryOp},
 				{Value: "3", Type: Operand},
-				{Value: "*", Type: BinaryOperator},
+				{Value: "*", Type: BinaryOp},
 				{Value: "4", Type: Operand},
 				{Value: ",", Type: BinaryFuncSeparator},
 				{Value: "pow", Type: BinaryFunc},
 				{Value: "(", Type: OpenDelimiter},
 				{Value: "(", Type: OpenDelimiter},
-				{Value: "-", Type: UnaryOperator},
+				{Value: "-", Type: UnaryOp},
 				{Value: "1", Type: Operand},
-				{Value: "+", Type: BinaryOperator},
+				{Value: "+", Type: BinaryOp},
 				{Value: "sqrt", Type: UnaryFunc},
 				{Value: "(", Type: OpenDelimiter},
 				{Value: "3", Type: Operand},
 				{Value: ")", Type: CloseDelimiter},
 				{Value: ")", Type: CloseDelimiter},
-				{Value: "*", Type: BinaryOperator},
+				{Value: "*", Type: BinaryOp},
 				{Value: "4", Type: Operand},
 				{Value: ",", Type: BinaryFuncSeparator},
 				{Value: "3", Type: Operand},
@@ -296,13 +296,13 @@ func TestLexer_Tokenize_ReturnCorrectTokens(t *testing.T) {
 			lexer: odataLexer,
 			expectedTokens: []Token{
 				{Value: "name", Type: Operand},
-				{Value: "eq", Type: BinaryOperator},
+				{Value: "eq", Type: BinaryOp},
 				{Value: "'test'", Type: StringOperand},
-				{Value: "or", Type: BinaryOperator},
+				{Value: "or", Type: BinaryOp},
 				{Value: "anequivalent", Type: Operand},
-				{Value: "eq", Type: BinaryOperator},
+				{Value: "eq", Type: BinaryOp},
 				{Value: "'name eq contains'", Type: StringOperand},
-				{Value: "or", Type: BinaryOperator},
+				{Value: "or", Type: BinaryOp},
 				{Value: "contains", Type: BinaryFunc},
 				{Value: "(", Type: OpenDelimiter},
 				{Value: "tolower", Type: UnaryFunc},

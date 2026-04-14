@@ -9,8 +9,8 @@ type TokenType int
 const (
 	Operand TokenType = iota
 	StringOperand
-	UnaryOperator
-	BinaryOperator
+	UnaryOp
+	BinaryOp
 	BinaryFunc
 	UnaryFunc
 	OpenDelimiter
@@ -25,9 +25,9 @@ func (t TokenType) String() string {
 		return "Operand"
 	case StringOperand:
 		return "StringOperand"
-	case BinaryOperator:
+	case BinaryOp:
 		return "BinaryOperator"
-	case UnaryOperator:
+	case UnaryOp:
 		return "UnaryOperator"
 	case BinaryFunc:
 		return "BinaryFunc"
@@ -204,7 +204,7 @@ func (l *Lexer) Tokenize(expression string) *TokenStream {
 		if op, ok := binaryOpIndices[i]; ok && operandType != StringOperand {
 			token = Token{
 				Value: op,
-				Type:  BinaryOperator,
+				Type:  BinaryOp,
 			}
 			i += len(op)
 			foundType = true
@@ -225,7 +225,7 @@ func (l *Lexer) Tokenize(expression string) *TokenStream {
 		} else if op, ok := unaryOpIndices[i]; ok && operandType != StringOperand {
 			token = Token{
 				Value: op,
-				Type:  UnaryOperator,
+				Type:  UnaryOp,
 			}
 			i += len(op)
 			foundType = true
