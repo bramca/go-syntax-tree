@@ -76,6 +76,8 @@ func (t *TokenStream) Peek() Token {
 	return token
 }
 
+// Lexer
+// defines the operators, functions and other optional features for a certain syntax
 type Lexer struct {
 	BinaryOperators []string
 	UnaryOperators  []string

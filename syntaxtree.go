@@ -116,6 +116,14 @@ type Node struct {
 	IsGroup    bool
 }
 
+// BuildTree
+// builds a tree based on an input query using the Pratt parser algorithm.
+// It needs the following fields in the SyntaxTree to be defined:
+//
+//	tree := syntaxtree.SyntaxTree{
+//	    Lexer:      &syntaxtree.Lexer{...},
+//	    Precedence: map[string]int{...},
+//	}
 func (t *SyntaxTree) BuildTree(query string) error {
 	if t.Lexer == nil {
 		return &ParseError{
@@ -142,6 +150,17 @@ func (t *SyntaxTree) BuildTree(query string) error {
 }
 
 // WARNING: Deprecated
+// ConstructTree
+// constructs a tree based on an input query using a custom parser.
+// It needs the following fields in the SyntaxTree to be defined:
+//
+//	tree := syntaxtree.SyntaxTree{
+//	    OperatorPrecedence:    []string{...},
+//	    OperatorParsers:	   []OperatorParsers{...},
+//	    BinaryFunctionParsers: []BinaryFunctionParsers{...},
+//	    UnaryFunctionParsers:  []UnaryFunctionParsers{...},
+//	    Separator:             "...",
+//	}
 func (t *SyntaxTree) ConstructTree(query string) error {
 	parsedQuery, err := t.ParseQuery(query)
 	if err != nil {
