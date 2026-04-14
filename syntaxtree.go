@@ -8,12 +8,16 @@ import (
 	"strings"
 )
 
+// NodeType specifies the type of nodes in the tree
 type NodeType int
 
 const (
 	Unknown NodeType = iota // 0 by default
+	// both binary functions as binary operators are put in this category
 	Operator
+	// both unary functions as unary operators are put in this category
 	UnaryOperator
+	// operators have a left and right operand, unary operators only have a left operand
 	LeftOperand
 	RightOperand
 )
