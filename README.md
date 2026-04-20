@@ -113,6 +113,9 @@ will result in the following trees:
 ## 🗺️ Roadmap
 
 - [X] Use Pratt parser algorithm
+	- The first version used a custom algorithm that is was not as efficient
+	- The benchmark shows the performance difference with the Pratt parser version:
+![benchmark](.img/benchmark.png)
 - [X] Parse unary operators
 - [ ] Parse right associativity
 - [ ] Parse postfix expressions
