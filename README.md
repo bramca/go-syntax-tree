@@ -4,93 +4,118 @@
 [![build](https://github.com/bramca/go-syntax-tree/actions/workflows/test.yaml/badge.svg)](https://github.com/bramca/go-syntax-tree/actions/workflows/test.yaml)
 [![release](https://img.shields.io/github/v/release/bramca/go-syntax-tree.svg)](https://github.com/bramca/go-syntax-tree/releases)
 
-This package provides a way to construct a simple [Syntax Tree](https://en.wikipedia.org/wiki/Abstract_syntax_tree) for a certain `query` based on predefined `Operators` and `Functions` with there mutual priority. It will also parse and take into account grouping using `()` in the operator precedence.
+This package provides a way to construct a simple [Syntax Tree](https://en.wikipedia.org/wiki/Abstract_syntax_tree) for a certain `query` based on predefined `Operators` and `Functions` with there mutual priority. For operator precedence parsing it uses the [Pratt parser](https://en.wikipedia.org/wiki/Operator-precedence_parser#Pratt_parsing) algorithm.
 
 After parsing and constructing the tree from a given `query` string, the `SyntaxTree` will consist of a **Root** `Node`. This one acts as a starting point to go over the tree in pre-, in- or post-order (ref: [Tree Traversal](https://en.wikipedia.org/wiki/Tree_traversal)).
 It will also contain a list of all `Nodes` in the `SyntaxTree`.
 
 There is a `.String()` function that will print the `SyntaxTree` in [dot](https://graphviz.org/doc/info/lang.html) file syntax.
-This can be used to write the `SyntaxTree` to a `.dot` file that can be parsed to an **image** to visualize the tree. (eg. `❯ dot -Tpng tree.dot > tree.png`)
+This can be used to write the `SyntaxTree` to a `.dot` file that can be parsed to an **image** to visualize the tree. (eg. `dot -Tpng tree.dot -o tree.png`)
 
 ## 📋 Example
 
 ```go
 import (
+	"os"
 	"fmt"
-	"regexp"
 
 	syntaxtree "github.com/bramca/go-syntax-tree"
 )
 
-func firstExample() {
-	query := "1-sqrt(pow(2,3)+1)*2/(sqrt(1+1)*pow(3+3,pow(3,sqrt(2))))"
-	operatorsPrecedence := []string{
-		"pow",
-		"sqrt",
-		"/",
-		"*",
-		"+",
-		"-",
+func main() {
+	mathLexer := &syntaxtree.Lexer{
+		BinaryOperators: []string{
+			"*",
+			"/",
+			"+",
+			"-",
+		},
+		UnaryOperators: []string{
+			"-",
+		},
+		BinaryFunctions: []string{
+			"pow",
+		},
+		UnaryFunctions: []string{
+			"sqrt",
+		},
+		OpenDelimiter:             '(',
+		CloseDelimiter:            ')',
+		BinaryFunctionOpSeparator: ',',
 	}
 
-	operators := []string{
-		"*",
-		"/",
-		"+",
-		"-",
+	mathTree := syntaxtree.SyntaxTree{
+		Lexer: mathLexer,
+		Precendence: map[string]int{
+			"+": 1,
+			"-": 1,
+			"*": 2,
+			"/": 2,
+		},
 	}
 
-	binaryFunctions := []string{
-		"pow",
+	err := mathTree.BuildTree("-1+pow(2+3*4,pow((-1+sqrt(3))*4,3))")
+	if err != nil {
+		fmt.Printf("err: %s\n", err)
+		os.Exit(1)
 	}
 
-	binaryFunctionParsers := make([]syntaxtree.BinaryFunctionParser, len(binaryFunctions))
-	for i, binaryFunction := range binaryFunctions {
-		binaryFunctionParsers[i] = syntaxtree.BinaryFunctionParser{
-			FunctionName:     binaryFunction,
-			OpeningDelimiter: '(',
-			ClosingDelimiter: ')',
-			OperandSeparator: ',',
-		}
+	sqlLexer := &syntaxtree.Lexer{
+		BinaryOperators: []string{
+			"AND",
+			"OR",
+			"=",
+			"!=",
+			"<",
+			"<=",
+			">",
+			">=",
+		},
+		OpenDelimiter:   '(',
+		CloseDelimiter:  ')',
+		StringDelimiter: '\'',
+		TokenSeparator:  ' ',
 	}
 
-	unaryFunctions := []string{
-		"sqrt",
+	sqlTree := syntaxtree.SyntaxTree{
+		Lexer: sqlLexer,
+		Precendence: map[string]int{
+			"OR":  1,
+			"AND": 2,
+			"=":   3,
+			"!=":  3,
+			"<":   3,
+			"<=":  3,
+			">":   3,
+			">=":  3,
+		},
 	}
 
-	unaryFunctionParsers :=  make([]syntaxtree.UnaryFunctionParser, len(unaryFunctions))
-	for i, unaryFunction := range unaryFunctions {
-		unaryFunctionParsers[i] = syntaxtree.UnaryFunctionParser{
-			FunctionName:     unaryFunction,
-			OpeningDelimiter: '(',
-			ClosingDelimiter: ')',
-		}
+	err = sqlTree.BuildTree("name = 'ab12' OR price <= 10 AND price >= 5")
+	if err != nil {
+		fmt.Printf("err: %s\n", err)
+		os.Exit(1)
 	}
 
-	operatorParsers := make([]syntaxtree.OperatorParser, len(operators))
-	for i, operator := range operators {
-		operatorParsers[i] = syntaxtree.OperatorParser{
-			OperatorString:  operator,
-			OperatorPattern: regexp.MustCompile(fmt.Sprintf(`([\d\(\)]*)\%s([\d\(\)]*|pow|sqrt)`, operator)),
-		}
-	}
-
-	syntaxTree := syntaxtree.SyntaxTree{
-		OperatorPrecedence: operatorsPrecedence,
-		OperatorParsers: operatorParsers,
-		BinaryFunctionParsers: binaryFunctionParsers,
-		UnaryFunctionParsers: unaryFunctionParsers,
-		Separator: ";",
-	}
-
-    err := syntaxTree.ConstructTree(query)
-    if err != nil {
-		panic(fmt.Sprintf("Could not construct tree for query '%s': %s\n", query, err))
-    }
-
-    fmt.Printf("%s", &syntaxTree)
+	fmt.Printf("Math Tree (dotfile format):\n%s\n", mathTree)
+	fmt.Printf("SQL Tree (dotfile format):\n%s\n", sqlTree)
 }
+
 ```
 
-will result in the following tree:
-![Syntax Tree](.img/tree.png)
+will result in the following trees:
+
+| Math Tree                               | SQL Tree                              |
+|-----------------------------------------|---------------------------------------|
+| ![Math Syntax Tree](.img/math-tree.png) | ![SQL Syntax Tree](.img/sql-tree.png) |
+
+
+## 🗺️ Roadmap
+
+- [X] Use Pratt parser algorithm
+	- The first version used a custom algorithm that is was not as efficient
+	- The benchmark shows the performance difference with the Pratt parser version:
+![benchmark](.img/benchmark.png)
+- [X] Parse unary operators
+- [ ] Parse right associativity
+- [ ] Parse postfix expressions

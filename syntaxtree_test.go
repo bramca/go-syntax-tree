@@ -1,206 +1,7 @@
 package syntaxtree
 
 import (
-	"fmt"
-	"regexp"
 	"testing"
-)
-
-type Example struct {
-	OperatorPrecedence []string
-	OperatorParsers    []OperatorParser
-	BinaryFunctions    []string
-	UnaryFunctions     []string
-}
-
-func (e *Example) GetBinaryFunctionOperators(openingDelimiter byte, closingDelimiter byte, operatndSeparator byte) []BinaryFunctionParser {
-	binaryFunctionParsers := make([]BinaryFunctionParser, len(e.BinaryFunctions))
-	for i, binaryFunction := range e.BinaryFunctions {
-		binaryFunctionParsers[i] = BinaryFunctionParser{
-			FunctionName:     binaryFunction,
-			OpeningDelimiter: openingDelimiter,
-			ClosingDelimiter: closingDelimiter,
-			OperandSeparator: operatndSeparator,
-		}
-	}
-
-	return binaryFunctionParsers
-}
-
-func (e *Example) GetUnaryFunctionOperators(openingDelimiter byte, closingDelimiter byte) []UnaryFunctionParser {
-	unaryFunctionParsers := make([]UnaryFunctionParser, len(e.UnaryFunctions))
-	for i, unaryFunction := range e.UnaryFunctions {
-		unaryFunctionParsers[i] = UnaryFunctionParser{
-			FunctionName:     unaryFunction,
-			OpeningDelimiter: openingDelimiter,
-			ClosingDelimiter: closingDelimiter,
-		}
-	}
-
-	return unaryFunctionParsers
-}
-
-func Equal[V comparable](t *testing.T, got, expected V) {
-	t.Helper()
-
-	if expected != got {
-		t.Errorf(`Equal(
-t,
-got:
-%v
-,
-expected:
-%v
-)`, got, expected)
-	}
-}
-
-func Error(t *testing.T, err error) {
-	t.Helper()
-
-	if err == nil {
-		t.Error("Expected err not to be nil but it is")
-	}
-}
-
-func NoError(t *testing.T, err error) {
-	t.Helper()
-
-	if err != nil {
-		t.Errorf("Expected error to be nil but it is not. err: %v", err)
-	}
-}
-
-var (
-	exampleMath = Example{
-		OperatorPrecedence: []string{
-			"pow",
-			"sqrt",
-			"/",
-			"*",
-			"+",
-			"-",
-		},
-		OperatorParsers: []OperatorParser{
-			{
-				OperatorString:  "*",
-				OperatorPattern: regexp.MustCompile(fmt.Sprintf(`([\d\(\)]*)\%s([\d\(\)]*|pow|sqrt)`, "*")),
-			},
-			{
-				OperatorString:  "/",
-				OperatorPattern: regexp.MustCompile(fmt.Sprintf(`([\d\(\)]*)\%s([\d\(\)]*|pow|sqrt)`, "/")),
-			},
-			{
-				OperatorString:  "+",
-				OperatorPattern: regexp.MustCompile(fmt.Sprintf(`([\d\(\)]*)\%s([\d\(\)]*|pow|sqrt)`, "+")),
-			},
-			{
-				OperatorString:  "-",
-				OperatorPattern: regexp.MustCompile(fmt.Sprintf(`([\d\(\)]*)\%s([\d\(\)]*|pow|sqrt)`, "-")),
-			},
-		},
-		BinaryFunctions: []string{
-			"pow",
-		},
-		UnaryFunctions: []string{
-			"sqrt",
-		},
-	}
-
-	exampleOdata = Example{
-		OperatorPrecedence: []string{
-			"length",
-			"indexof",
-			"tolower",
-			"toupper",
-			"trim",
-			"year",
-			"month",
-			"day",
-			"hour",
-			"minute",
-			"second",
-			"fractionalsecond",
-			"date",
-			"time",
-			"now",
-			"round",
-			"floor",
-			"ceiling",
-			"concat",
-			"contains",
-			"endswith",
-			"startswith",
-			"eq",
-			"ne",
-			"gt",
-			"ge",
-			"lt",
-			"le",
-			"and",
-			"or",
-		},
-		OperatorParsers: []OperatorParser{
-			{
-				OperatorString:  "eq",
-				OperatorPattern: regexp.MustCompile(`(.*?) eq (.*?)`),
-			},
-			{
-				OperatorString:  "ne",
-				OperatorPattern: regexp.MustCompile(`(.*?) ne (.*?)`),
-			},
-			{
-				OperatorString:  "gt",
-				OperatorPattern: regexp.MustCompile(`(.*?) gt (.*?)`),
-			},
-			{
-				OperatorString:  "ge",
-				OperatorPattern: regexp.MustCompile(`(.*?) ge (.*?)`),
-			},
-			{
-				OperatorString:  "lt",
-				OperatorPattern: regexp.MustCompile(`(.*?) lt (.*?)`),
-			},
-			{
-				OperatorString:  "le",
-				OperatorPattern: regexp.MustCompile(`(.*?) le (.*?)`),
-			},
-			{
-				OperatorString:  "and",
-				OperatorPattern: regexp.MustCompile(`(.*?) and (.*?)`),
-			},
-			{
-				OperatorString:  "or",
-				OperatorPattern: regexp.MustCompile(`(.*?) or (.*?)`),
-			},
-		},
-		BinaryFunctions: []string{
-			"concat",
-			"contains",
-			"endswith",
-			"startswith",
-		},
-		UnaryFunctions: []string{
-			"length",
-			"indexof",
-			"tolower",
-			"toupper",
-			"trim",
-			"year",
-			"month",
-			"day",
-			"hour",
-			"minute",
-			"second",
-			"fractionalsecond",
-			"date",
-			"time",
-			"now",
-			"round",
-			"floor",
-			"ceiling",
-		},
-	}
 )
 
 func TestNodeTypeString_ReturnsCorrectValue(t *testing.T) {
@@ -243,6 +44,278 @@ func TestNodeTypeString_ReturnsCorrectValue(t *testing.T) {
 	}
 }
 
+func TestBuildTree_ReturnsError(t *testing.T) {
+	t.Parallel()
+	tests := map[string]struct {
+		syntaxTree       SyntaxTree
+		query            string
+		expectedErrorMsg string
+	}{
+		"example missing lexer": {
+			syntaxTree:       SyntaxTree{},
+			query:            "(1+2)*3",
+			expectedErrorMsg: "failed to parse query: no lexer defined, cannot tokenize the query",
+		},
+		"example empty query": {
+			syntaxTree: SyntaxTree{
+				Lexer:       mathLexer,
+				Precendence: mathPrecedence,
+			},
+			query:            "",
+			expectedErrorMsg: "failed to parse query: unexpected token: \"\" (Unknown)",
+		},
+		"example missing opening bracket": {
+			syntaxTree: SyntaxTree{
+				Lexer:       mathLexer,
+				Precendence: mathPrecedence,
+			},
+			query:            "(1+2))*3",
+			expectedErrorMsg: "failed to parse query: unexpected \")\" without matching opening bracket",
+		},
+		"example missing closing bracket": {
+			syntaxTree: SyntaxTree{
+				Lexer:       mathLexer,
+				Precendence: mathPrecedence,
+			},
+			query:            "(1+(2*3)",
+			expectedErrorMsg: "failed to parse query: expected closing bracket but got \"\"",
+		},
+		"example parsing error typo last part": {
+			syntaxTree: SyntaxTree{
+				Lexer:       odataLexer,
+				Precendence: odataPrecedence,
+			},
+			query:            "concat('#',name) qe '#test'",
+			expectedErrorMsg: "failed to parse query: unexpected token \"qe'#test'\" (StringOperand) after \"concat\" (Operator)",
+		},
+		"example parsing error typo first part": {
+			syntaxTree: SyntaxTree{
+				Lexer:       odataLexer,
+				Precendence: odataPrecedence,
+			},
+			query:            "conct('#',name) eq '#test'",
+			expectedErrorMsg: "failed to parse query: unexpected token \"(\" (OpenDelimiter) after \"conct\" (LeftOperand)",
+		},
+	}
+
+	for name, testData := range tests {
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+			// Arrange
+			syntaxTree := testData.syntaxTree
+			query := testData.query
+
+			// Act
+			err := syntaxTree.BuildTree(query)
+
+			// Assert
+			Error(t, err)
+			Equal(t, err.Error(), testData.expectedErrorMsg)
+		})
+	}
+}
+
+func TestBuildTree_CreatesCorrectGraph(t *testing.T) {
+	t.Parallel()
+	tests := map[string]struct {
+		syntaxTree    SyntaxTree
+		query         string
+		expectedGraph string
+	}{
+		"math simple example": {
+			syntaxTree: SyntaxTree{
+				Lexer:       mathLexer,
+				Precendence: mathPrecedence,
+			},
+			query: "1+2*3",
+			expectedGraph: `graph {
+	"4 [+]" -- "0 [1]"
+	"3 [*]" -- "1 [2]"
+	"3 [*]" -- "2 [3]"
+	"4 [+]" -- "3 [*]"
+}`,
+		},
+		"math simple example grouping": {
+			syntaxTree: SyntaxTree{
+				Lexer:       mathLexer,
+				Precendence: mathPrecedence,
+			},
+			query: "(1+2)*3",
+			expectedGraph: `graph {
+	"2 [+]" -- "0 [1]"
+	"2 [+]" -- "1 [2]"
+	"4 [*]" -- "2 [+]"
+	"4 [*]" -- "3 [3]"
+}`,
+		},
+		"math simple example unary function": {
+			syntaxTree: SyntaxTree{
+				Lexer:       mathLexer,
+				Precendence: mathPrecedence,
+			},
+			query: "(1+2)*sqrt(3)",
+			expectedGraph: `graph {
+	"2 [+]" -- "0 [1]"
+	"2 [+]" -- "1 [2]"
+	"5 [*]" -- "2 [+]"
+	"4 [sqrt]" -- "3 [3]"
+	"5 [*]" -- "4 [sqrt]"
+}`,
+		},
+		"math simple example function recursion": {
+			syntaxTree: SyntaxTree{
+				Lexer:       mathLexer,
+				Precendence: mathPrecedence,
+			},
+			query: "(1+2)*sqrt(pow(2,pow(3,sqrt(3))))",
+			expectedGraph: `graph {
+	"2 [+]" -- "0 [1]"
+	"2 [+]" -- "1 [2]"
+	"10 [*]" -- "2 [+]"
+	"8 [pow]" -- "3 [2]"
+	"7 [pow]" -- "4 [3]"
+	"6 [sqrt]" -- "5 [3]"
+	"7 [pow]" -- "6 [sqrt]"
+	"8 [pow]" -- "7 [pow]"
+	"9 [sqrt]" -- "8 [pow]"
+	"10 [*]" -- "9 [sqrt]"
+}`,
+		},
+		"math complex example": {
+			syntaxTree: SyntaxTree{
+				Lexer:       mathLexer,
+				Precendence: mathPrecedence,
+			},
+			query: "1-sqrt(pow(2,3)+1)*2/(sqrt(1+1)*pow(3+3,pow(3,sqrt(2))))",
+			expectedGraph: `graph {
+	"23 [-]" -- "0 [1]"
+	"3 [pow]" -- "1 [2]"
+	"3 [pow]" -- "2 [3]"
+	"5 [+]" -- "3 [pow]"
+	"5 [+]" -- "4 [1]"
+	"6 [sqrt]" -- "5 [+]"
+	"8 [*]" -- "6 [sqrt]"
+	"8 [*]" -- "7 [2]"
+	"22 [/]" -- "8 [*]"
+	"11 [+]" -- "9 [1]"
+	"11 [+]" -- "10 [1]"
+	"12 [sqrt]" -- "11 [+]"
+	"21 [*]" -- "12 [sqrt]"
+	"15 [+]" -- "13 [3]"
+	"15 [+]" -- "14 [3]"
+	"20 [pow]" -- "15 [+]"
+	"19 [pow]" -- "16 [3]"
+	"18 [sqrt]" -- "17 [2]"
+	"19 [pow]" -- "18 [sqrt]"
+	"20 [pow]" -- "19 [pow]"
+	"21 [*]" -- "20 [pow]"
+	"22 [/]" -- "21 [*]"
+	"23 [-]" -- "22 [/]"
+}`,
+		},
+		"odata simple example": {
+			syntaxTree: SyntaxTree{
+				Lexer:       odataLexer,
+				Precendence: odataPrecedence,
+			},
+			query: "toupper(tolower(name)) eq 'JOHN'",
+			expectedGraph: `graph {
+	"1 [tolower]" -- "0 [name]"
+	"2 [toupper]" -- "1 [tolower]"
+	"4 [eq]" -- "2 [toupper]"
+	"4 [eq]" -- "3 ['JOHN']"
+}`,
+		},
+		"odata simple example multibyte string": {
+			syntaxTree: SyntaxTree{
+				Lexer:       odataLexer,
+				Precendence: odataPrecedence,
+			},
+			query: "contains(tolower(name),'café')",
+			expectedGraph: `graph {
+	"1 [tolower]" -- "0 [name]"
+	"3 [contains]" -- "1 [tolower]"
+	"3 [contains]" -- "2 ['café']"
+}`,
+		},
+		"odata complex example": {
+			syntaxTree: SyntaxTree{
+				Lexer:       odataLexer,
+				Precendence: odataPrecedence,
+			},
+			query: "name eq 'John' and (concat(lastname,concat(' ', name)) eq 'Smith John' or contains(concat(name,lastname),'Smith') or length(concat(name,lastname)) eq 10)",
+			expectedGraph: `graph {
+	"2 [eq]" -- "0 [name]"
+	"2 [eq]" -- "1 ['John']"
+	"23 [and]" -- "2 [eq]"
+	"7 [concat]" -- "3 [lastname]"
+	"6 [concat]" -- "4 [' ']"
+	"6 [concat]" -- "5 [name]"
+	"7 [concat]" -- "6 [concat]"
+	"9 [eq]" -- "7 [concat]"
+	"9 [eq]" -- "8 ['Smith John']"
+	"15 [or]" -- "9 [eq]"
+	"12 [concat]" -- "10 [name]"
+	"12 [concat]" -- "11 [lastname]"
+	"14 [contains]" -- "12 [concat]"
+	"14 [contains]" -- "13 ['Smith']"
+	"15 [or]" -- "14 [contains]"
+	"22 [or]" -- "15 [or]"
+	"18 [concat]" -- "16 [name]"
+	"18 [concat]" -- "17 [lastname]"
+	"19 [length]" -- "18 [concat]"
+	"21 [eq]" -- "19 [length]"
+	"21 [eq]" -- "20 [10]"
+	"22 [or]" -- "21 [eq]"
+	"23 [and]" -- "22 [or]"
+}`,
+		},
+		"odata complex example 2": {
+			syntaxTree: SyntaxTree{
+				Lexer:       odataLexer,
+				Precendence: odataPrecedence,
+			},
+			query: "not(contains(tolower(testValue),' ') and endswith(metadata/name,'prd')) and not(name eq 'test' or startswith(name,'prd'))",
+			expectedGraph: `graph {
+	"1 [tolower]" -- "0 [testValue]"
+	"3 [contains]" -- "1 [tolower]"
+	"3 [contains]" -- "2 [' ']"
+	"7 [and]" -- "3 [contains]"
+	"6 [endswith]" -- "4 [metadata/name]"
+	"6 [endswith]" -- "5 ['prd']"
+	"7 [and]" -- "6 [endswith]"
+	"8 [not]" -- "7 [and]"
+	"17 [and]" -- "8 [not]"
+	"11 [eq]" -- "9 [name]"
+	"11 [eq]" -- "10 ['test']"
+	"15 [or]" -- "11 [eq]"
+	"14 [startswith]" -- "12 [name]"
+	"14 [startswith]" -- "13 ['prd']"
+	"15 [or]" -- "14 [startswith]"
+	"16 [not]" -- "15 [or]"
+	"17 [and]" -- "16 [not]"
+}`,
+		},
+	}
+
+	for name, testData := range tests {
+		t.Run(name, func(t *testing.T) {
+			// t.Parallel()
+			// Arrange
+			syntaxTree := testData.syntaxTree
+			query := testData.query
+
+			// Act
+			err := syntaxTree.BuildTree(query)
+
+			// Assert
+			NoError(t, err)
+			Equal(t, syntaxTree.String(), testData.expectedGraph)
+		})
+	}
+}
+
+// WARNING: Deprecated
 func TestParseQuery_ReturnsError(t *testing.T) {
 	t.Parallel()
 	tests := map[string]struct {
@@ -371,6 +444,7 @@ func TestParseQuery_ReturnsError(t *testing.T) {
 	}
 }
 
+// WARNING: Deprecated
 func TestParseQuery_ReturnsCorrectQuery(t *testing.T) {
 	t.Parallel()
 	tests := map[string]struct {
@@ -507,6 +581,7 @@ func TestParseQuery_ReturnsCorrectQuery(t *testing.T) {
 	}
 }
 
+// WARNING: Deprecated
 func TestConstructTree_ReturnsError(t *testing.T) {
 	t.Parallel()
 	tests := map[string]struct {
@@ -577,6 +652,7 @@ func TestConstructTree_ReturnsError(t *testing.T) {
 	}
 }
 
+// WARNING: Deprecated
 func TestConstructTree_ReturnsNoError(t *testing.T) {
 	t.Parallel()
 	tests := map[string]struct {
@@ -661,6 +737,7 @@ func TestConstructTree_ReturnsNoError(t *testing.T) {
 	}
 }
 
+// WARNING: Deprecated
 func TestConstructTree_CreatesCorrectGraph(t *testing.T) {
 	t.Parallel()
 	tests := map[string]struct {

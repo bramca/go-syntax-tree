@@ -2,17 +2,22 @@ package syntaxtree
 
 import (
 	"fmt"
+	"maps"
 	"regexp"
 	"slices"
 	"strings"
 )
 
+// NodeType specifies the type of nodes in the tree
 type NodeType int
 
 const (
 	Unknown NodeType = iota // 0 by default
+	// both binary functions as binary operators are put in this category
 	Operator
+	// both unary functions as unary operators are put in this category
 	UnaryOperator
+	// operators have a left and right operand, unary operators only have a left operand
 	LeftOperand
 	RightOperand
 )
@@ -36,8 +41,7 @@ func (e NodeType) String() string {
 
 // SyntaxTree
 // Construct a syntax tree based on a defined syntax containing of simple
-// Operators, Binary Functions and Unary Functions with there mutual precedence
-// The construction of the tree will also take into account grouping using brackets '()' in the precedence
+// Binary Operators, Unary Operators, Binary Functions and Unary Functions with there mutual precedence.
 type SyntaxTree struct {
 	// Root node of the tree
 	Root *Node
@@ -45,29 +49,49 @@ type SyntaxTree struct {
 	// List of all nodes of the tree
 	Nodes []*Node
 
+	// Define a Lexer that contains:
+	//   - Binary / Unary operators
+	//   - Binary / Unary functions
+	//   - Grouping delimiters
+	//   - String delimiters
+	//   - Extra tokenization configuration
+	Lexer *Lexer
+
+	// Define a precedence mapping for the binary operators
+	// A higher number means higher precedence
+	// Equal numbers translate into left associative parsing
+	Precendence map[string]int
+
+	// WARNING: Deprecated
 	// Precedence of the operators and functions in the syntax
 	// Operators with a lower index in this array have a higher precedence over operators with a lower index
 	OperatorPrecedence []string
 
+	// WARNING: Deprecated
 	// Define the patterns of the syntax operators
 	OperatorParsers []OperatorParser
 
+	// WARNING: Deprecated
 	// Define the format of the syntax binary functions
 	BinaryFunctionParsers []BinaryFunctionParser
 
+	// WARNING: Deprecated
 	// Define the format of the syntax unary functions
 	UnaryFunctionParsers []UnaryFunctionParser
 
+	// WARNING: Deprecated
 	// Define a separator that can be used to separate the operators and operands during parsing
 	// This is a string that cannot exist in the query character space
 	Separator string
 }
 
+// WARNING: Deprecated
 type OperatorParser struct {
 	OperatorString  string
 	OperatorPattern *regexp.Regexp
 }
 
+// WARNING: Deprecated
 type BinaryFunctionParser struct {
 	FunctionName     string
 	OpeningDelimiter byte
@@ -75,6 +99,7 @@ type BinaryFunctionParser struct {
 	OperandSeparator byte
 }
 
+// WARNING: Deprecated
 type UnaryFunctionParser struct {
 	FunctionName     string
 	OpeningDelimiter byte
@@ -91,6 +116,51 @@ type Node struct {
 	IsGroup    bool
 }
 
+// BuildTree
+// builds a tree based on an input query using the Pratt parser algorithm.
+// It needs the following fields in the SyntaxTree to be defined:
+//
+//	tree := syntaxtree.SyntaxTree{
+//	    Lexer:      &syntaxtree.Lexer{...},
+//	    Precedence: map[string]int{...},
+//	}
+func (t *SyntaxTree) BuildTree(query string) error {
+	if t.Lexer == nil {
+		return &ParseError{
+			Msg: "no lexer defined, cannot tokenize the query",
+		}
+	}
+	tokenStream := t.Lexer.Tokenize(query)
+
+	parser := PrattParser{
+		Precedence: t.Precendence,
+	}
+
+	minPrecendence := slices.Min(slices.Collect(maps.Values(t.Precendence))) - 1
+
+	root, nodes, err := parser.Parse(tokenStream, minPrecendence, t.Nodes)
+	if err != nil {
+		return err
+	}
+
+	t.Root = root
+	t.Nodes = nodes
+
+	return nil
+}
+
+// WARNING: Deprecated
+// ConstructTree
+// constructs a tree based on an input query using a custom parser.
+// It needs the following fields in the SyntaxTree to be defined:
+//
+//	tree := syntaxtree.SyntaxTree{
+//	    OperatorPrecedence:    []string{...},
+//	    OperatorParsers:	   []OperatorParsers{...},
+//	    BinaryFunctionParsers: []BinaryFunctionParsers{...},
+//	    UnaryFunctionParsers:  []UnaryFunctionParsers{...},
+//	    Separator:             "...",
+//	}
 func (t *SyntaxTree) ConstructTree(query string) error {
 	parsedQuery, err := t.ParseQuery(query)
 	if err != nil {
@@ -102,6 +172,8 @@ func (t *SyntaxTree) ConstructTree(query string) error {
 	return nil
 }
 
+// WARNING: Deprecated
+//
 //nolint:gocognit,gocyclo // complex function, no way around it
 func (t *SyntaxTree) ParseQuery(query string) (string, error) {
 	originalQuery := query
@@ -277,6 +349,8 @@ func (t *SyntaxTree) ParseQuery(query string) (string, error) {
 	return query, nil
 }
 
+// WARNING: Deprecated
+//
 //nolint:gocognit,nestif,gocyclo,gocritic // complex function, no way around it
 func createTree(t *SyntaxTree, parsedQuery string, startId int) (*Node, int) {
 	var currentNode *Node
@@ -449,6 +523,10 @@ func createTree(t *SyntaxTree, parsedQuery string, startId int) (*Node, int) {
 }
 
 func (t SyntaxTree) String() string {
+	if t.Root == nil {
+		return ""
+	}
+
 	currentNode := t.Root
 	graphData := "graph {\n"
 	nodesVisited := map[int]bool{}
